@@ -1,5 +1,6 @@
 import json
 import os
+import time
 import unittest
 
 import _helpers
@@ -116,6 +117,17 @@ class ScanTests(unittest.TestCase):
     def test_one_hit_per_pattern_line(self):
         hits = scan_text("a.md", "x​​​ y​\n", False, load_patterns())
         self.assertEqual(len(hits), 1)
+
+    def test_adversarial_inputs_finish_quickly(self):
+        cases = [
+            ("a.md", "<!-- ignore " * 800), ("a.md", "<!-- ignore " * 87000),
+            ("a.sh", "npm i " + "-g " * 3200), ("a.sh", "npm i " + "-g " * 350000),
+            ("a.sh", "npx " + "-y " * 350000), ("a.sh", "pip install " + "-U " * 350000),
+        ]
+        for name, text in cases:
+            t0 = time.time()
+            scan_text(name, text[:1048576], name.endswith(".sh"), load_patterns())
+            self.assertLess(time.time() - t0, 2.0, (name, text[:20], len(text)))
 
     def test_is_executable(self):
         self.assertTrue(is_executable("a/run.SH", ""))

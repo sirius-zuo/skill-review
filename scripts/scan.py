@@ -18,6 +18,7 @@ from discover import _read_regular
 EXEC_EXTS = frozenset((".sh", ".bash", ".zsh", ".py", ".js", ".mjs", ".cjs", ".ts",
                        ".rb", ".ps1", ".pl"))
 EXCERPT_MAX = 120
+COMMENT_MAX = 2000
 
 SYMLINK_ID = "SEC-SYMLINK-ESCAPE"
 SYMLINK_FIX = "Remove the symlink, or point it at a file inside the skill directory."
@@ -75,6 +76,29 @@ def make_excerpt(line_text, start, end, redact, max_chars):
     return "".join(pieces[lo:hi])[:max_chars]
 
 
+def _comment_matches(text, regex):
+    """Yield (start, end) of each closed HTML comment whose body matches regex.
+
+    Linear: comments are located with str.find and bodies capped at COMMENT_MAX.
+    """
+    pos = 0
+    close = -1
+    while True:
+        start = text.find("<!--", pos)
+        if start < 0:
+            return
+        if close < start + 4:
+            close = text.find("-->", start + 4)
+            if close < 0:
+                return
+        if close - start - 4 <= COMMENT_MAX:
+            if regex.search(text, start + 4, close):
+                yield start, close + 3
+            pos = close + 3
+        else:
+            pos = start + 4
+
+
 def scan_text(rel_path, text, executable, patterns):
     base = rel_path.rsplit("/", 1)[-1]
     hits = []
@@ -87,18 +111,22 @@ def scan_text(rel_path, text, executable, patterns):
         if p["file_globs"] and not any(fnmatch.fnmatchcase(base, g) for g in p["file_globs"]):
             continue
         seen = set()
-        for m in p["_re"].finditer(text):
+        if p.get("html_comment_body"):
+            spans = _comment_matches(text, p["_re"])
+        else:
+            spans = ((m.start(), m.end()) for m in p["_re"].finditer(text))
+        for m_start, m_end in spans:
             if line_starts is None:
                 line_starts = [0] + [i + 1 for i, c in enumerate(text) if c == "\n"]
-            idx = bisect.bisect_right(line_starts, m.start()) - 1
+            idx = bisect.bisect_right(line_starts, m_start) - 1
             if idx in seen:
                 continue
             seen.add(idx)
             line_begin = line_starts[idx]
             line_end = text.find("\n", line_begin)
             line_text = text[line_begin:line_end if line_end >= 0 else len(text)]
-            s = m.start() - line_begin
-            e = m.end() - line_begin
+            s = m_start - line_begin
+            e = m_end - line_begin
             hits.append({
                 "pattern_id": p["id"], "family": p["family"], "severity": p["severity"],
                 "file": rel_path, "line": idx + 1,
