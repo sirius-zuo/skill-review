@@ -8,7 +8,7 @@
   "additionalProperties": false,
   "properties": {
     "schema_version": {"const": 1},
-    "engine": {"const": "script"},
+    "engine": {"enum": ["script", "llm-fallback"]},
     "target": {"type": "string", "minLength": 1},
     "date": {"type": "string", "minLength": 1},
     "arguments": {"type": "object"},

@@ -206,6 +206,14 @@ class AssembleTests(unittest.TestCase):
             self.assertEqual(out["routing"]["status"], "skipped")
             self.assertIn("valid", out["routing"]["reason"])
 
+    def test_schema_accepts_llm_fallback_engine(self):
+        with _helpers.tempdir() as tmp:
+            out = assemble.assemble(make_run(tmp, [skill("a")]))
+            out["engine"] = "llm-fallback"
+            self.assertEqual(validate_against(out, "results"), [])
+            out["engine"] = "other"
+            self.assertNotEqual(validate_against(out, "results"), [])
+
     def test_kits_and_schema(self):
         with _helpers.tempdir() as tmp:
             work = make_run(tmp, [skill("a", recs=[rec(1, "A1")])])
