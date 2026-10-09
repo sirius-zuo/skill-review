@@ -1,0 +1,623 @@
+{
+ "schema_version": 1,
+ "categories": {
+  "workflow": {
+   "applies_if": "multi_step"
+  },
+  "scripts_tools": {
+   "applies_if": "scripts or shell or network_read or network_write"
+  }
+ },
+ "gates": [
+  {
+   "id": "TRG-B1",
+   "category": "trigger",
+   "kind": "blocker",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "description too generic",
+   "why": "A description this generic could trigger on almost any task, so the skill fires wrongly or never."
+  },
+  {
+   "id": "TRG-CG1",
+   "category": "trigger",
+   "kind": "critical",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "states what and when",
+   "why": "Without both what and when, the agent cannot decide reliably whether to load the skill."
+  },
+  {
+   "id": "TRG-CG2",
+   "category": "trigger",
+   "kind": "critical",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "concrete user trigger terms",
+   "why": "Concrete trigger terms are what let the agent match a user request to the skill."
+  },
+  {
+   "id": "TRG-CG3",
+   "category": "trigger",
+   "kind": "critical",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "no workflow summary in description",
+   "why": "A workflow summary in the description makes the agent follow it instead of reading the body."
+  },
+  {
+   "id": "TRG-QG1",
+   "category": "trigger",
+   "kind": "quality",
+   "applies_if": "has_siblings",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "distinct from sibling skills",
+   "why": "Overlapping descriptions make routing between sibling skills unreliable."
+  },
+  {
+   "id": "TRG-QG2",
+   "category": "trigger",
+   "kind": "quality",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "required inputs discoverable early",
+   "why": "Users and agents need to know the required inputs before they start."
+  },
+  {
+   "id": "TRG-QG3",
+   "category": "trigger",
+   "kind": "quality",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "description matches body",
+   "why": "A description that drifts from the body triggers the skill for work it does not do."
+  },
+  {
+   "id": "SCP-B1",
+   "category": "scope",
+   "kind": "blocker",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "no discernible purpose",
+   "why": "A skill with no discernible purpose cannot be used or trusted."
+  },
+  {
+   "id": "SCP-CG1",
+   "category": "scope",
+   "kind": "critical",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "purpose fits one sentence",
+   "why": "A skill that cannot be summarized in one sentence is usually doing too many things."
+  },
+  {
+   "id": "SCP-CG2",
+   "category": "scope",
+   "kind": "critical",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "states when not to use",
+   "why": "Without exclusions, the skill gets applied to nearby tasks it handles badly."
+  },
+  {
+   "id": "SCP-QG1",
+   "category": "scope",
+   "kind": "quality",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "preconditions stated",
+   "why": "Unstated preconditions cause failures that look like skill bugs."
+  },
+  {
+   "id": "SCP-QG2",
+   "category": "scope",
+   "kind": "quality",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "success criteria clear",
+   "why": "Without a success definition the agent cannot tell when it is done."
+  },
+  {
+   "id": "CLR-B1",
+   "category": "clarity",
+   "kind": "blocker",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "instructions contradict each other",
+   "why": "Contradictory instructions make behavior unpredictable."
+  },
+  {
+   "id": "CLR-CG1",
+   "category": "clarity",
+   "kind": "critical",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "consistent terminology",
+   "why": "Switching terms for one concept makes the agent treat them as different things."
+  },
+  {
+   "id": "CLR-CG2",
+   "category": "clarity",
+   "kind": "critical",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "vague terms replaced by criteria",
+   "why": "Undefined judgment words let the agent decide arbitrarily."
+  },
+  {
+   "id": "CLR-QG1",
+   "category": "clarity",
+   "kind": "quality",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "examples where non-obvious",
+   "why": "Examples remove ambiguity faster than extra prose."
+  },
+  {
+   "id": "CLR-QG2",
+   "category": "clarity",
+   "kind": "quality",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "freedom matches fragility",
+   "why": "Over-prescribing judgment or under-specifying fragile steps both cause failures."
+  },
+  {
+   "id": "CLR-QG3",
+   "category": "clarity",
+   "kind": "quality",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "one default, not a menu",
+   "why": "A menu of equivalent options leaves the agent to guess."
+  },
+  {
+   "id": "CON-CG1",
+   "category": "conciseness",
+   "kind": "critical",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "no explaining known basics",
+   "why": "Explaining basics the model already knows spends context for no benefit."
+  },
+  {
+   "id": "CON-CG2",
+   "category": "conciseness",
+   "kind": "critical",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "every section earns its place",
+   "why": "Boilerplate sections cost context and dilute the instructions that matter."
+  },
+  {
+   "id": "CON-QG1",
+   "category": "conciseness",
+   "kind": "quality",
+   "applies_if": "large_body",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "niche detail in linked files",
+   "why": "Keeping rarely needed detail in the body loads it on every run."
+  },
+  {
+   "id": "CON-QG2",
+   "category": "conciseness",
+   "kind": "quality",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "no duplicated content",
+   "why": "Duplicated content drifts out of sync and wastes context."
+  },
+  {
+   "id": "CON-QG3",
+   "category": "conciseness",
+   "kind": "quality",
+   "applies_if": "has_references",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "linked files named and signposted",
+   "why": "Agents only load linked files they can recognize as relevant."
+  },
+  {
+   "id": "WFL-B1",
+   "category": "workflow",
+   "kind": "blocker",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "loop without exit condition",
+   "why": "An unbounded loop can run forever or burn budget."
+  },
+  {
+   "id": "WFL-CG1",
+   "category": "workflow",
+   "kind": "critical",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "ordered steps with completion checks",
+   "why": "Without checkable completion conditions the agent cannot tell a step is done."
+  },
+  {
+   "id": "WFL-CG2",
+   "category": "workflow",
+   "kind": "critical",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "failure path for each step",
+   "why": "Undefined failure paths lead to improvisation or silent continuation."
+  },
+  {
+   "id": "WFL-CG3",
+   "category": "workflow",
+   "kind": "critical",
+   "applies_if": "fans_out",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "fan-out has a stated maximum",
+   "why": "Unbounded fan-out multiplies cost and can exhaust resources."
+  },
+  {
+   "id": "WFL-QG1",
+   "category": "workflow",
+   "kind": "quality",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "validate-fix-repeat loop used",
+   "why": "A validation loop catches errors before they propagate."
+  },
+  {
+   "id": "WFL-QG2",
+   "category": "workflow",
+   "kind": "quality",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "fragile steps delegated to scripts",
+   "why": "Prose instructions for exact operations are error-prone compared with scripts."
+  },
+  {
+   "id": "WFL-QG3",
+   "category": "workflow",
+   "kind": "quality",
+   "applies_if": "long_running",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "carried-forward state is stated",
+   "why": "Long runs lose or bloat context unless carry-over is explicit."
+  },
+  {
+   "id": "WFL-QG4",
+   "category": "workflow",
+   "kind": "quality",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "stop-and-ask conditions explicit",
+   "why": "Unclear stop conditions cause either needless interruptions or unsafe guesses."
+  },
+  {
+   "id": "SCT-B1",
+   "category": "scripts_tools",
+   "kind": "blocker",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "no handling of tool failure",
+   "why": "Ignoring tool failure lets the agent continue on false results."
+  },
+  {
+   "id": "SCT-CG1",
+   "category": "scripts_tools",
+   "kind": "critical",
+   "applies_if": "scripts",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "scripts handle own errors",
+   "why": "Scripts that crash with raw tracebacks leave the agent to guess the cause."
+  },
+  {
+   "id": "SCT-CG2",
+   "category": "scripts_tools",
+   "kind": "critical",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "inputs validated before use",
+   "why": "Unvalidated inputs cause failures and injection risk."
+  },
+  {
+   "id": "SCT-CG3",
+   "category": "scripts_tools",
+   "kind": "critical",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "dependencies declared",
+   "why": "Undeclared dependencies fail unpredictably on other machines."
+  },
+  {
+   "id": "SCT-QG1",
+   "category": "scripts_tools",
+   "kind": "quality",
+   "applies_if": "scripts",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "constants are justified",
+   "why": "Unexplained magic numbers cannot be adjusted safely."
+  },
+  {
+   "id": "SCT-QG2",
+   "category": "scripts_tools",
+   "kind": "quality",
+   "applies_if": "scripts",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "run versus read is clear",
+   "why": "Reading a script that should be run wastes context, and vice versa."
+  },
+  {
+   "id": "SCT-QG3",
+   "category": "scripts_tools",
+   "kind": "quality",
+   "applies_if": "multi_step",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "partial failure handled",
+   "why": "One failed call among several can leave work half done."
+  },
+  {
+   "id": "SAF-B1",
+   "category": "safety",
+   "kind": "blocker",
+   "applies_if": "irreversible",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "irreversible action without confirmation",
+   "why": "Irreversible actions without confirmation can cause unrecoverable harm."
+  },
+  {
+   "id": "SAF-B2",
+   "category": "safety",
+   "kind": "blocker",
+   "applies_if": "shell or scripts or network_write",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "untrusted input in commands",
+   "why": "Interpolating untrusted input into commands enables injection."
+  },
+  {
+   "id": "SAF-B3",
+   "category": "safety",
+   "kind": "blocker",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "conceals actions from user",
+   "why": "Concealing actions from the user removes oversight."
+  },
+  {
+   "id": "SAF-CG1",
+   "category": "safety",
+   "kind": "critical",
+   "applies_if": "",
+   "answered_by": "script",
+   "script_check": "judgment.no_undisclosed_capabilities",
+   "short": "capabilities match disclosure",
+   "why": "Undisclosed capabilities mean the skill does more than it claims."
+  },
+  {
+   "id": "SAF-CG2",
+   "category": "safety",
+   "kind": "critical",
+   "applies_if": "irreversible",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "confirmation before each risky action",
+   "why": "One blanket confirmation does not cover each distinct high-impact action."
+  },
+  {
+   "id": "SAF-CG3",
+   "category": "safety",
+   "kind": "critical",
+   "applies_if": "ingests_untrusted and (shell or file_write or network_write or irreversible or credentials)",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "untrusted content treated as data",
+   "why": "Ingested content that is followed as instructions lets third parties steer the agent."
+  },
+  {
+   "id": "SAF-CG4",
+   "category": "safety",
+   "kind": "critical",
+   "applies_if": "shell or scripts or network_read or network_write or file_write",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "permissions limited to need",
+   "why": "Excess permissions widen the damage when something goes wrong."
+  },
+  {
+   "id": "SAF-QG1",
+   "category": "safety",
+   "kind": "quality",
+   "applies_if": "credentials",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "secrets kept out of output",
+   "why": "Leaked secrets in output or logs are hard to revoke."
+  },
+  {
+   "id": "SAF-QG2",
+   "category": "safety",
+   "kind": "quality",
+   "applies_if": "network_write",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "outbound destinations fixed or approved",
+   "why": "Open-ended destinations enable data exfiltration."
+  },
+  {
+   "id": "SAF-QG3",
+   "category": "safety",
+   "kind": "quality",
+   "applies_if": "file_write",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "writes confined to stated paths",
+   "why": "Unbounded writes can overwrite unrelated files."
+  },
+  {
+   "id": "OUT-B1",
+   "category": "output",
+   "kind": "blocker",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "output undefined or unpredictable",
+   "why": "A consumer cannot rely on output that is not defined."
+  },
+  {
+   "id": "OUT-CG1",
+   "category": "output",
+   "kind": "critical",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "output structure predictable",
+   "why": "Predictable structure lets users and downstream tools rely on the output."
+  },
+  {
+   "id": "OUT-CG2",
+   "category": "output",
+   "kind": "critical",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "output says what happened and next",
+   "why": "Users need to know the result and the follow-up action."
+  },
+  {
+   "id": "OUT-QG1",
+   "category": "output",
+   "kind": "quality",
+   "applies_if": "composable_output",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "machine-readable structure documented",
+   "why": "Consumers cannot parse output whose structure is undocumented."
+  },
+  {
+   "id": "OUT-QG2",
+   "category": "output",
+   "kind": "quality",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "errors distinguishable from success",
+   "why": "If errors look like success, failures go unnoticed."
+  },
+  {
+   "id": "OUT-QG3",
+   "category": "output",
+   "kind": "quality",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "output length bounded",
+   "why": "Unbounded output can flood the context."
+  },
+  {
+   "id": "EVL-B1",
+   "category": "evaluation",
+   "kind": "blocker",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "no tests, expectations or results",
+   "why": "With no tests or expectations the skill's quality is unverifiable."
+  },
+  {
+   "id": "EVL-CG1",
+   "category": "evaluation",
+   "kind": "critical",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "at least 3 specific test cases",
+   "why": "A few specific cases are the minimum to check behavior."
+  },
+  {
+   "id": "EVL-CG2",
+   "category": "evaluation",
+   "kind": "critical",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "negative cases present",
+   "why": "Without negative cases, over-triggering and wrong behavior go undetected."
+  },
+  {
+   "id": "EVL-QG1",
+   "category": "evaluation",
+   "kind": "quality",
+   "applies_if": "",
+   "answered_by": "script",
+   "script_check": "ingest.has_valid_result",
+   "short": "valid ingested eval result exists",
+   "why": "An ingested result is evidence that the skill was actually run."
+  },
+  {
+   "id": "EVL-QG2",
+   "category": "evaluation",
+   "kind": "quality",
+   "applies_if": "",
+   "answered_by": "script",
+   "script_check": "ingest.has_baseline",
+   "short": "ingested result has baseline",
+   "why": "A baseline shows whether the skill adds value over no skill."
+  },
+  {
+   "id": "EVL-QG3",
+   "category": "evaluation",
+   "kind": "quality",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "limitations documented",
+   "why": "Documented limits set correct expectations."
+  },
+  {
+   "id": "EVL-QG4",
+   "category": "evaluation",
+   "kind": "quality",
+   "applies_if": "",
+   "answered_by": "judge",
+   "script_check": null,
+   "short": "tested models or agents stated",
+   "why": "Behavior varies by model, so tested targets should be named."
+  }
+ ]
+}
