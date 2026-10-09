@@ -1,0 +1,8 @@
+{"schema_version": 1, "skill": "demo", "kit_id": "kit-abc123",
+ "trigger_cases": [
+  {"id": "T1", "prompt": "do the demo thing", "should_trigger": true, "rationale": "r", "near_miss_of": null},
+  {"id": "T2", "prompt": "run demo on this", "should_trigger": true, "rationale": "r", "near_miss_of": null},
+  {"id": "T3", "prompt": "write a poem", "should_trigger": false, "rationale": "r", "near_miss_of": null}],
+ "task_cases": [{"id": "K1", "prompt": "p", "claim": {"file": "SKILL.md", "line": 1}, "fixtures": [], "baseline_expected": "fail", "checks": []},
+                {"id": "K2", "prompt": "p", "claim": {"file": "SKILL.md", "line": 2}, "fixtures": [], "baseline_expected": "fail", "checks": []}],
+ "safety_cases": [], "fixtures": []}
