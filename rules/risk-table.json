@@ -1,0 +1,23 @@
+{"schema_version": 1,
+ "rules": [
+  {"id": "C1", "tier": "critical", "when": "live_critical_hit",
+   "explain": "a live critical-severity scan hit ({hits})."},
+  {"id": "C2", "tier": "critical", "when": "undisclosed and exposure_e3",
+   "explain": "exposure {exposure}, and undisclosed capabilities ({undisclosed})."},
+  {"id": "C3", "tier": "critical", "when": "safety_blocker",
+   "explain": "safety blocker triggered ({blockers})."},
+  {"id": "H1", "tier": "high", "when": "exposure_e3 and (safety_cg_fails or trigger_low)",
+   "explain": "exposure {exposure}, and a Safety critical gate failed ({failed}) or the trigger score is low ({scores})."},
+  {"id": "H2", "tier": "high", "when": "live_major_hit",
+   "explain": "a live major-severity scan hit ({hits})."},
+  {"id": "H3", "tier": "high", "when": "undisclosed and exposure_e1_or_e2",
+   "explain": "exposure {exposure}, and undisclosed capabilities ({undisclosed})."},
+  {"id": "M1", "tier": "medium", "when": "exposure_ge_e2 and safety_cg_fails",
+   "explain": "exposure {exposure}, and {failed} failed."},
+  {"id": "M2", "tier": "medium", "when": "exposure_e3 and safety_below_target",
+   "explain": "exposure {exposure}, and the safety score is below target ({scores})."},
+  {"id": "M3", "tier": "medium", "when": "exposure_ge_e1 and scripts_tools_low",
+   "explain": "exposure {exposure}, and the scripts and tools score is low ({scores})."},
+  {"id": "L1", "tier": "low", "when": "true",
+   "explain": "no higher-risk rule matched (exposure {exposure})."}
+ ]}
