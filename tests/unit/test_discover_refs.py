@@ -105,7 +105,12 @@ class ReferenceTests(unittest.TestCase):
             make_tree(root, spec)
             with mock.patch.dict(scoring()["limits"], {"max_files_per_skill": 4}):
                 m = build_manifest(root)
-            self.assertEqual(len(m["skills"][0]["files"]), 4)
+            files = m["skills"][0]["files"]
+            self.assertEqual(len(files), 11)
+            self.assertLessEqual(sum(1 for f in files if f["bundled"]), 4)
+            extras = [f for f in files if f["path"].startswith("shared/")
+                      and f["skip_reason"] == "file_limit"]
+            self.assertEqual(len(extras), 7)
             warn = [w for w in m["warnings"] if w["code"] == "FILE_LIMIT"]
             self.assertEqual(len(warn), 1)
             self.assertIn("7 referenced files", warn[0]["detail"])

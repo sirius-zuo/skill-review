@@ -191,6 +191,10 @@ def _collect_references(real_root, skill, text, limits, warnings):
                 present.add(resolved)
                 if len(skill["files"]) >= limits["max_files_per_skill"]:
                     dropped.append(resolved)
+                    skill["files"].append({
+                        "path": resolved, "size": 0, "binary": False, "symlink": None,
+                        "hidden": any(p.startswith(".") for p in resolved.split("/")),
+                        "bundled": False, "skip_reason": "file_limit"})
                 else:
                     skill["files"].append(_file_entry(real_root, resolved, limits))
             if depth == 1 and resolved.endswith(".md"):
