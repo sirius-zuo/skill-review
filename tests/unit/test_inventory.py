@@ -131,6 +131,20 @@ class InventoryTests(unittest.TestCase):
         self.assertEqual(r["file_write"]["value"], "suspected")
         self.assertEqual(r["file_write"]["sources"], ["CAP-FILE_WRITE-4"])
 
+    def test_file_write_ignores_dev_null_redirects(self):
+        for line in ("cmd 2>/dev/null", "cmd > /dev/null", "cmd &>/dev/null",
+                     "cmd >/dev/null 2>&1", "cmd >> /dev/null"):
+            r = inv(dict(md("B\n"), **{"a.sh": line + "\n"}))
+            self.assertEqual(r["file_write"]["value"], "false", line)
+            r = inv(md("```bash\n%s\n```\n" % line))
+            self.assertEqual(r["file_write"]["value"], "false", line)
+        r = inv(dict(md("B\n"), **{"a.sh": "echo x > out.txt\n"}))
+        self.assertEqual(r["file_write"]["value"], "true")
+        r = inv(md("```bash\necho x > out.txt\n```\n"))
+        self.assertEqual(r["file_write"]["value"], "true")
+        r = inv(dict(md("B\n"), **{"a.sh": "cmd 2>/dev/null > /dev/nullish\n"}))
+        self.assertEqual(r["file_write"]["value"], "true")
+
     def test_network_write(self):
         self.check("network_write", dict(md("B\n"), **{"a.py": "requests.post(u, data=d)\n"}),
                    dict(md("B\n"), **{"a.py": "requests.get(u)\n"}))

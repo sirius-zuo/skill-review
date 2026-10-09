@@ -172,5 +172,96 @@ class TargetTests(unittest.TestCase):
         self.assertEqual(estimate_passes(3, 1, True, False), 3)
 
 
+GIT_ENV = dict(os.environ, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@t",
+               GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@t")
+
+
+def _git_repo_with_symlink(base):
+    """A local repo whose tracked s/leak is a symlink (mode 120000) escaping the root."""
+    repo = os.path.join(base, "r")
+    os.makedirs(repo)
+    make_tree(repo, {"s/SKILL.md": skill("s"), "s/ok.md": "ok"})
+    os.symlink("../../../../etc/passwd", os.path.join(repo, "s", "leak"))
+    os.symlink("ok.md", os.path.join(repo, "s", "inside"))
+    for cmd in (["init", "-q"], ["add", "."], ["commit", "-q", "-m", "x"]):
+        subprocess.run(["git", "-C", repo] + cmd, env=GIT_ENV, check=True,
+                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    return repo
+
+
+class GitSymlinkTests(unittest.TestCase):
+    """Clones use core.symlinks=false, so tracked links arrive as plain files (mode 120000)."""
+
+    @unittest.skipUnless(shutil.which("git"), "git required for the mode 120000 check")
+    def test_clone_symlink_detected_and_hit(self):
+        from scan import scan_skill
+        with tempdir() as base, tempdir() as tmp:
+            repo = _git_repo_with_symlink(base)
+            clone_tmp, root = clone_repo("file://" + repo, tmp)
+            # the clone holds a plain file containing the target path
+            self.assertFalse(os.path.islink(os.path.join(root, "s", "leak")))
+            m = build_manifest(root)
+            files = {f["path"]: f for f in m["skills"][0]["files"]}
+            self.assertEqual(files["s/leak"]["symlink"], "../../../../etc/passwd")
+            self.assertEqual(files["s/leak"]["skip_reason"], "symlink")
+            self.assertFalse(files["s/leak"]["bundled"])
+            self.assertEqual(files["s/inside"]["symlink"], "ok.md")
+            self.assertIsNone(files["s/ok.md"]["symlink"])
+            self.assertEqual(validate_against(m, "manifest"), [])
+            hits = scan_skill(m, m["skills"][0], m["root"])["hits"]
+            esc = [h for h in hits if h["pattern_id"] == "SEC-SYMLINK-ESCAPE"]
+            self.assertEqual([h["file"] for h in esc], ["s/leak"])
+
+    @unittest.skipUnless(shutil.which("git"), "git required for the mode 120000 check")
+    def test_git_unavailable_skips_with_warning(self):
+        with tempdir() as base, tempdir() as tmp:
+            repo = _git_repo_with_symlink(base)
+            _, root = clone_repo("file://" + repo, tmp)
+            with mock.patch("discover.shutil.which", return_value=None):
+                m = build_manifest(root)
+            files = {f["path"]: f for f in m["skills"][0]["files"]}
+            self.assertIsNone(files["s/leak"]["symlink"])
+            codes = [w["code"] for w in m["warnings"]]
+            self.assertIn("GIT_SYMLINKS_SKIPPED", codes)
+            detail = [w["detail"] for w in m["warnings"] if w["code"] == "GIT_SYMLINKS_SKIPPED"]
+            self.assertIn("git", detail[0])
+
+    def test_git_failure_skips_with_warning(self):
+        with tempdir() as root:
+            make_tree(root, {"s/SKILL.md": skill("s"), ".git/HEAD": "junk"})
+            with mock.patch("discover.shutil.which", return_value="/usr/bin/git"), \
+                    mock.patch("discover.subprocess.run", side_effect=OSError("no git")):
+                m = build_manifest(root)
+            self.assertIn("GIT_SYMLINKS_SKIPPED", [w["code"] for w in m["warnings"]])
+
+    def test_no_git_dir_runs_no_git(self):
+        with tempdir() as root:
+            make_tree(root, {"s/SKILL.md": skill("s")})
+            with mock.patch("discover.subprocess.run") as run:
+                m = build_manifest(root)
+            run.assert_not_called()
+            self.assertEqual(m["warnings"], [])
+
+
+class CloneTimeoutTests(unittest.TestCase):
+    def test_timeout_from_scoring_raises_clone_error_and_cleans(self):
+        seen = {}
+
+        def fake_run(cmd, **kw):
+            seen["cmd"], seen["timeout"] = cmd, kw.get("timeout")
+            raise subprocess.TimeoutExpired(cmd, kw.get("timeout"))
+
+        self.assertIn("clone_timeout_seconds", scoring()["limits"])
+        with tempdir() as tmp:
+            with mock.patch.dict(scoring()["limits"], {"clone_timeout_seconds": 0.01}), \
+                    mock.patch("discover.subprocess.run", side_effect=fake_run):
+                with self.assertRaises(CloneError) as cm:
+                    clone_repo("https://github.com/o/r", tmp)
+            self.assertEqual(seen["timeout"], 0.01)
+            self.assertEqual(seen["cmd"][:2], ["git", "clone"])
+            self.assertIn("timed out", cm.exception.stderr)
+            self.assertEqual(os.listdir(tmp), [])
+
+
 if __name__ == "__main__":
     unittest.main()

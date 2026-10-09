@@ -94,10 +94,28 @@ class SkillMdTests(unittest.TestCase):
         body = self.parsed.body
         used = re.findall(r"--mark-failed[ =](\S+)", body)
         self.assertTrue(used)
-        allowed = {"judge_error", "judgment_invalid", "review_failed"}
+        from common import MARK_FAILED_REASONS
+        allowed = set(MARK_FAILED_REASONS)
+        self.assertEqual(set(t.strip("`'\"") for t in used), allowed)
         for tok in used:
             self.assertIn(tok.strip("`'\""), allowed, tok)
         self.assertNotIn("<one-line reason>", body)
+
+    def test_rerun_wording_same_minute(self):
+        body = self.parsed.body
+        row = [l for l in body.splitlines() if l.startswith("| Interrupted run")]
+        self.assertEqual(len(row), 1)
+        row = row[0]
+        self.assertIn("within the same minute", row)
+        self.assertIn("same default folder", row)
+        self.assertIn("--out", row)
+        self.assertIn("refused", row)
+        self.assertIn("Otherwise re-running is safe", row)
+
+    def test_kit_status_names(self):
+        doc = read("support", "fallback.md")
+        self.assertIn("`kit_failed`", doc)
+        self.assertNotIn("status `failed`", doc)
 
     def test_non_retryable_score_failure_marks_failed(self):
         # Spec 12: score.py exit 1 is a data error for that skill and the run continues, so

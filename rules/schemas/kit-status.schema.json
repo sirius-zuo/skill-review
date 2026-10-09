@@ -27,7 +27,7 @@
     "status": {
       "enum": [
         "ok",
-        "failed"
+        "kit_failed"
       ]
     },
     "errors": {

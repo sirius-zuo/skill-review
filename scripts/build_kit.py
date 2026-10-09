@@ -9,11 +9,12 @@ import re
 import secrets
 import sys
 
-from common import (ROOT_DIR, UsageError, ValidationFailed, load_manifest, load_run,
-                    read_json, read_text, run_main, scoring, skill_work_dir, validate_against,
-                    write_json)
+from common import (MARK_FAILED_REASONS, ROOT_DIR, UsageError, ValidationFailed,
+                    load_manifest, load_run, read_json, read_text, run_main, scoring,
+                    skill_work_dir, validate_against, write_json)
 
 TEMPLATES_DIR = os.path.join(ROOT_DIR, "kit-templates")
+KIT_FAILED = "kit_failed"  # kit status names (spec 10.1, 12): "ok" or "kit_failed"
 _KEY_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 _CANARY_REF = re.compile(r"\{\{canary:([^}]*)\}\}")
 
@@ -308,7 +309,7 @@ def main(argv):
     ap = argparse.ArgumentParser(prog="build_kit.py")
     ap.add_argument("--work-dir", required=True)
     ap.add_argument("--skill", required=True)
-    ap.add_argument("--mark-failed", default=None)
+    ap.add_argument("--mark-failed", default=None, choices=MARK_FAILED_REASONS)
     args = ap.parse_args(argv)
     key = args.skill
     if not _KEY_RE.match(key) or ".." in key:
@@ -316,8 +317,8 @@ def main(argv):
     w = args.work_dir
 
     if args.mark_failed is not None:
-        _status(w, key, _skill_name(w, key), "failed", [args.mark_failed])
-        sys.stdout.write(json.dumps({"ok": True, "status": "failed"}) + "\n")
+        _status(w, key, _skill_name(w, key), KIT_FAILED, [args.mark_failed])
+        sys.stdout.write(json.dumps({"ok": True, "status": KIT_FAILED}) + "\n")
         return 0
 
     try:
@@ -342,7 +343,7 @@ def main(argv):
                    "sibling_names": siblings, "templates_dir": TEMPLATES_DIR}
             errors = validate_kit(kit, ctx, scoring()["kit"])
     if errors:
-        _status(w, key, name, "failed", errors)
+        _status(w, key, name, KIT_FAILED, errors)
         raise ValidationFailed(errors, {"retryable": True})
     kit = materialize(kit, kit_dir, TEMPLATES_DIR)
     _status(w, key, name, "ok", [])

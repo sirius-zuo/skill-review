@@ -437,7 +437,7 @@
       "path": null
     },
     "03-gamma": {
-      "status": "failed",
+      "status": "kit_failed",
       "path": null
     }
   },

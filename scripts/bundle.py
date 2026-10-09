@@ -72,10 +72,13 @@ def bundled_texts(manifest, skill):
 def bundle_skill(manifest, skill, nonce):
     files = _load(manifest, _ordered_files(skill))
     repo = _load(manifest, manifest.get("repo_files", []))
-    status = ["skill: %s" % skill["name"], "key: %s" % skill["key"], "files:"]
-    status += ["  %s [%s]" % (e["path"], _status(e, t)) for e, t in files]
+    # Every untrusted value is escaped like a file path, so a name or path holding a newline
+    # stays on its own status line and cannot forge others.
+    status = ["skill: %s" % _esc_path(skill["name"]), "key: %s" % _esc_path(skill["key"]),
+              "files:"]
+    status += ["  %s [%s]" % (_esc_path(e["path"]), _status(e, t)) for e, t in files]
     status.append("repo-level files:")
-    status += ["  %s [%s]" % (e["path"], _status(e, t)) for e, t in repo]
+    status += ["  %s [%s]" % (_esc_path(e["path"]), _status(e, t)) for e, t in repo]
     parts = ["# skill header", wrap_untrusted("\n".join(status), nonce), "", "# skill files"]
     parts += [file_block(e["path"], t, nonce) for e, t in files if t is not None]
     parts += ["", "# repo-level files"]

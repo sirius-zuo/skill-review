@@ -333,12 +333,37 @@ class CliTests(unittest.TestCase):
         kit = json.load(open(os.path.join(self.kit_dir, "a", "kit.json")))
         self.assertEqual(kit["kit_id"], kit_id(kit))
 
-        p = self.run_cli("--work-dir", self.w, "--skill", "a", "--mark-failed", "agent gave up")
+        p = self.run_cli("--work-dir", self.w, "--skill", "a", "--mark-failed", "review_failed")
         self.assertEqual(p.returncode, 0, p.stderr)
+        self.assertEqual(json.loads(p.stdout)["status"], "kit_failed")
         st = self.status()
-        self.assertEqual(st["status"], "failed")
-        self.assertEqual(st["errors"], ["agent gave up"])
+        self.assertEqual(st["status"], "kit_failed")
+        self.assertEqual(st["errors"], ["review_failed"])
         self.assertEqual(validate_against(st, "kit-status"), [])
+
+    def test_cli_failing_kit_writes_kit_failed(self):
+        bad = copy.deepcopy(GOOD)
+        bad["task_cases"] = bad["task_cases"][:2]
+        self.write_kit(bad)
+        p = self.run_cli("--work-dir", self.w, "--skill", "a")
+        self.assertEqual(p.returncode, 1, p.stderr)
+        st = self.status()
+        self.assertEqual(st["status"], "kit_failed")
+        self.assertEqual(validate_against(st, "kit-status"), [])
+        old = dict(st, status="failed")
+        self.assertNotEqual(validate_against(old, "kit-status"), [])
+
+    def test_cli_mark_failed_rejects_unknown_reason(self):
+        from common import MARK_FAILED_REASONS
+        for bad in ("agent gave up", "", "kit_failed"):
+            p = self.run_cli("--work-dir", self.w, "--skill", "a", "--mark-failed", bad)
+            self.assertEqual(p.returncode, 2, bad)
+            self.assertIn("invalid choice", p.stderr)
+            self.assertFalse(os.path.exists(os.path.join(self.w, "a", "kit-status.json")))
+        for ok in MARK_FAILED_REASONS:
+            p = self.run_cli("--work-dir", self.w, "--skill", "a", "--mark-failed", ok)
+            self.assertEqual(p.returncode, 0, p.stderr)
+            self.assertEqual(self.status()["errors"], [ok])
 
     def test_cli_schema_error(self):
         self.write_kit({"schema_version": 1})

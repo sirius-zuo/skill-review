@@ -18,6 +18,10 @@ EXIT_VALIDATION = 1
 EXIT_USAGE = 2
 EXIT_CRASH = 3
 
+# The only reasons --mark-failed accepts (score.py and build_kit.py); SKILL.md uses these tokens
+# so no free text (such as a sub-agent's ERROR line) ever reaches a shell command.
+MARK_FAILED_REASONS = ("judge_error", "judgment_invalid", "review_failed")
+
 CATEGORY_ORDER = ["trigger", "scope", "clarity", "conciseness", "workflow",
                   "scripts_tools", "safety", "output", "evaluation"]
 

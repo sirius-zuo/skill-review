@@ -16,7 +16,7 @@ CAL_DIR = os.path.join(ROOT_DIR, "tests", "calibration")
 if CAL_DIR not in sys.path:
     sys.path.insert(0, CAL_DIR)
 
-from mutate import apply_mutation  # noqa: E402
+from mutate import apply_mutation, prepare_base  # noqa: E402
 from score_calibration import (cohen_kappa, corpus_matches, mutation_detection,  # noqa: E402
                                percent_agreement)
 import fetch_corpus  # noqa: E402
@@ -232,6 +232,29 @@ class MutationTests(unittest.TestCase):
             _, hits, text = results(skill)
             self.assertIn("SEC-SYMLINK-ESCAPE", [h["pattern_id"] for h in hits])
             self.assertNotIn("SECRET-CONTENT", text)
+
+    def test_mu09_base_clean_mutant_trips_name_rule(self):
+        # good-skill's name differs from its folder, so MU-09 compares against a prepared
+        # base whose name equals its folder; only the renamed mutant may trip L-NAME-03.
+        m = mutations()["MU-09"]
+        self.assertEqual(m["expect"]["lint"], ["L-NAME-03"])
+        with tempdir() as d:
+            base = prepare_base(GOOD, m, os.path.join(d, "base", "good-skill"))
+            base_lint, _, _ = results(base)
+            self.assertNotIn("L-NAME-03", base_lint)
+            mutant = apply_mutation(GOOD, m, os.path.join(d, "mut", "good-skill"))
+            self.assertEqual(os.path.basename(mutant), "renamed-folder")
+            mut_lint, _, _ = results(mutant)
+            self.assertIn("L-NAME-03", mut_lint)
+        with open(os.path.join(GOOD, "SKILL.md"), encoding="utf-8") as f:
+            self.assertIn("name: json-validator", f.read())  # fixture untouched
+
+    def test_prepare_base_is_plain_copy_for_other_ops(self):
+        with tempdir() as d:
+            out = prepare_base(GOOD, mutations()["MU-08"], os.path.join(d, "good-skill"))
+            with open(os.path.join(out, "SKILL.md"), "rb") as f, \
+                    open(os.path.join(GOOD, "SKILL.md"), "rb") as g:
+                self.assertEqual(f.read(), g.read())
 
     def test_base_untouched(self):
         with open(os.path.join(GOOD, "SKILL.md"), "rb") as f:

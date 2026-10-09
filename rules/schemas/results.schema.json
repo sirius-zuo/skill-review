@@ -66,7 +66,7 @@
         "required": ["status", "path"],
         "additionalProperties": false,
         "properties": {
-          "status": {"enum": ["ok", "failed", "skipped"]},
+          "status": {"enum": ["ok", "kit_failed", "skipped"]},
           "path": {"type": ["string", "null"]}
         }
       }

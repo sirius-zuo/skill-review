@@ -164,6 +164,56 @@ def _read_regular(real_root, rel, limit):
         return None
 
 
+def git_symlinks(real_root, limits, warnings):
+    """{rel path: None} for every tracked symlink (mode 120000) under a git root.
+
+    Clones use core.symlinks=false, so a tracked link is checked out as a plain file that
+    holds its target path; lstat alone cannot see it. Runs only when <root>/.git exists, with
+    an argument list (never a shell). If git is missing or fails, warn and return {}.
+    """
+    if not os.path.lexists(os.path.join(real_root, ".git")):
+        return {}
+    if shutil.which("git") is None:
+        warnings.append({"code": "GIT_SYMLINKS_SKIPPED",
+                         "detail": "git is not available, so tracked symlinks stored as plain "
+                                   "files (mode 120000) could not be detected"})
+        return {}
+    env = dict(os.environ, GIT_TERMINAL_PROMPT="0", GIT_OPTIONAL_LOCKS="0")
+    try:
+        proc = subprocess.run(
+            ["git", "-c", "core.fsmonitor=false", "-C", real_root, "ls-files", "-s", "-z", "--"],
+            env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            timeout=limits["git_timeout_seconds"])
+    except (OSError, subprocess.SubprocessError) as e:
+        warnings.append({"code": "GIT_SYMLINKS_SKIPPED",
+                         "detail": "git ls-files could not run (%s); tracked symlinks stored as "
+                                   "plain files were not detected" % e})
+        return {}
+    if proc.returncode != 0:
+        warnings.append({"code": "GIT_SYMLINKS_SKIPPED",
+                         "detail": "git ls-files failed (exit %s); tracked symlinks stored as "
+                                   "plain files were not detected" % proc.returncode})
+        return {}
+    links = {}
+    for rec in proc.stdout.split(b"\0"):
+        meta, sep, path = rec.partition(b"\t")
+        if sep and meta.split(b" ", 1)[0] == b"120000":
+            links[path.decode("utf-8", errors="replace")] = None
+    return links
+
+
+def _mark_git_symlinks(real_root, entries, links, limits):
+    """Record a tracked symlink checked out as a plain file: symlink = its target text."""
+    for e in entries:
+        if e["path"] not in links or e.get("symlink") is not None:
+            continue
+        if e["skip_reason"] in ("unreadable", "special", "file_limit"):
+            continue
+        target = _read_regular(real_root, e["path"], limits["binary_sniff_bytes"])
+        e.update({"symlink": target if target is not None else "", "size": 0,
+                  "binary": False, "bundled": False, "skip_reason": "symlink"})
+
+
 def _collect_references(real_root, skill, text, limits, warnings):
     refs = []
     dropped = []
@@ -241,8 +291,11 @@ def build_manifest(root, self_dir=None, source=None):
     skills = []
     warnings = []
     texts = {}
+    links = git_symlinks(real_root, limits, warnings)
     for d in sorted(skill_dirs):
         skill_file = (d + "/" if d != "." else "") + skill_dirs[d]
+        if skill_file in links:  # a tracked symlink, never a skill file (as with real links)
+            continue
         sf_path = os.path.join(real_root, skill_file.replace("/", os.sep))
         try:
             if stat.S_ISREG(os.lstat(sf_path).st_mode):
@@ -296,6 +349,11 @@ def build_manifest(root, self_dir=None, source=None):
 
     for d in owner_dirs:
         _collect_references(real_root, by_dir[d], texts[d], limits, warnings)
+    if links:
+        _mark_git_symlinks(real_root, repo_files, links, limits)
+        for d in owner_dirs:
+            _mark_git_symlinks(real_root, by_dir[d]["files"], links, limits)
+    for d in owner_dirs:
         by_dir[d]["eval_result_files"] = [e["path"] for e in by_dir[d]["files"]
                                           if _is_eval_result(real_root, e, limits)]
 
@@ -339,6 +397,7 @@ def validate_target(target):
 
 
 def clone_repo(url, tmp_parent=None):
+    timeout = scoring()["limits"]["clone_timeout_seconds"]
     tmp = tempfile.mkdtemp(prefix=CLONE_PREFIX, dir=tmp_parent)
     repo = os.path.join(tmp, "repo")
     try:
@@ -348,7 +407,11 @@ def clone_repo(url, tmp_parent=None):
             proc = subprocess.run(
                 ["git", "clone", "--depth", "1", "--no-recurse-submodules",
                  "-c", "core.symlinks=false", "--", url, repo],
-                env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+                env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True,
+                timeout=timeout)
+        except subprocess.TimeoutExpired:
+            raise CloneError(124, "timed out after %s seconds (limits.clone_timeout_seconds)"
+                             % timeout)
         except OSError as e:
             raise CloneError(127, str(e))
         if proc.returncode != 0:

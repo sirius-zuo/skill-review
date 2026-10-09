@@ -47,6 +47,14 @@ class SupportDocsTests(unittest.TestCase):
         for needle in needles:
             self.assertIn(needle, doc, needle)
 
+    def test_routing_file_naming_deviation_documented(self):
+        doc = _read("support", "fallback.md")
+        self.assertIn("## Spec deviations", doc)
+        sec = doc.split("## Spec deviations", 1)[1].split("\n## ", 1)[0]
+        for needle in ("`routing.json`", "`routing-<n>.json`", "`routing-map.json`",
+                       "`routing-input-<n>.txt`"):
+            self.assertIn(needle, sec, needle)
+
     def test_proven_runs_doc(self):
         doc = _read("support", "proven-runs.md")
         legacy = "## Legacy rubric — not comparable"

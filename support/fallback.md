@@ -31,11 +31,11 @@ In fallback mode you compose shell commands yourself (for `git clone`, `mkdir`, 
 
 1. **Validate the target.** A local path must exist and be a readable directory; take its canonical absolute path as the root. A URL must be `https://github.com/<org>/<repo>` with an optional `.git`. Apply the shell metacharacter rejection above.
 2. **Stale clones.** In the system temp directory, delete only directories whose name starts with `skill-review-clone-`, that contain the `.skill-review-clone` marker file, and that are older than `limits.stale_clone_hours`. Never delete anything without the marker.
-3. **Clone (URL only).** If `git` is missing, stop with the message in the SKILL.md error table. Create a temp directory named `skill-review-clone-<random>`, create the empty marker file `.skill-review-clone` in it, then run `git clone --depth 1 --no-recurse-submodules -c core.symlinks=false '<url>' '<tmp>/repo'` with `GIT_TERMINAL_PROMPT=0` and `GIT_LFS_SKIP_SMUDGE=1`. On failure, report the exit code and stderr, delete `<tmp>`, and stop. The root is `<tmp>/repo`.
+3. **Clone (URL only).** If `git` is missing, stop with the message in the SKILL.md error table. Create a temp directory named `skill-review-clone-<random>`, create the empty marker file `.skill-review-clone` in it, then run `git clone --depth 1 --no-recurse-submodules -c core.symlinks=false '<url>' '<tmp>/repo'` with `GIT_TERMINAL_PROMPT=0` and `GIT_LFS_SKIP_SMUDGE=1`, stopping it after `limits.clone_timeout_seconds`. On failure or timeout, report the exit code and stderr, delete `<tmp>`, and stop. The root is `<tmp>/repo`.
 4. **Run directory.** Use `--out`, or `./skill-reviews/<target>-<YYYYMMDDTHHMM>/`, where `<target>` is the last path component or repo name, lowercased, with runs of characters outside `[a-z0-9]` replaced by `-`. If it is inside the root, ask (SKILL.md, Confirmation). If the root equals `--self-dir`, ask. If it is not writable, stop. If `<run_dir>/work` already exists (in any form), stop with an error naming it and asking for another `--out`; never reuse or delete it.
 5. **Find skills.** Walk the root without following symlinks, skipping `.git/`. A directory containing a file named exactly `SKILL.md` is a skill; a lowercase `skill.md` is accepted (lint will flag it). A skill under any directory named `tests`, `test`, `fixtures`, `fixture`, `examples`, `example`, `samples` or `sample` has `kind: "fixture"` and its `parent` is the enclosing skill. Name each skill from its frontmatter `name`, else its folder name.
 6. **Keys.** Number the reviewable skills (kind `skill`) in path order; each key is the index as two digits, a dash, and the sanitized name.
-7. **Files.** Every file under a skill's directory belongs to it, recursively, including hidden files, except `.git/` and files in a nested skill. Record `path`, `size`, `binary`, `symlink`, `hidden`, `bundled` per the safe-reading rules.
+7. **Files.** Every file under a skill's directory belongs to it, recursively, including hidden files, except `.git/` and files in a nested skill. Record `path`, `size`, `binary`, `symlink`, `hidden`, `bundled` per the safe-reading rules. When the root holds `.git`, list the tracked files with `git -C '<root>' ls-files -s -z --`: an entry with the symlink file mode was checked out as a plain file holding its target path (clones use `core.symlinks=false`), so record it as a symlink whose target is that text, never bundle it, and never follow it. If `git` is missing or fails, add a `GIT_SYMLINKS_SKIPPED` warning and continue.
 8. **References.** From each SKILL.md, collect markdown link targets and backticked relative paths; follow references from referenced markdown files one more level to measure depth. Record each with `exists`, `inside_root` and `depth`; a referenced file inside the root joins the skill's files even if it lives elsewhere.
 9. **Repo files and eval results.** List root files that belong to no skill under `repo_files`. Per skill, record `kit-results.json`, `benchmark.json`, and any `.json` within `limits.ingest_max_bytes` whose top level has a `cases` array whose items contain `arms`, under `eval_result_files`.
 10. **Warnings.** Add `NAME_CONFLICT` for duplicate names and `FILE_LIMIT` per the size limits.
@@ -49,8 +49,8 @@ In fallback mode you compose shell commands yourself (for `git clone`, `mkdir`, 
 **Reads:** `W/manifest.json`, `W/run.json`, `rules/scoring.json` (`limits`). **Writes:** `W/<key>/bundle.txt`, `W/skills-list.txt`, and `W/run.json` updated with `nonce` (schema `rules/schemas/run.schema.json`; set `"engine": "llm-fallback"` on the updated file).
 
 1. Generate one random hexadecimal nonce for the run. If any text you will bundle contains it, generate another.
-2. For each reviewable skill, write `bundle.txt`: a `# skill header` line, then a header block listing `skill:`, `key:`, every file with its status in brackets (`bundled`, or why it was not bundled: `binary`, `symlink`, `too_large`, `file_limit`, `special`, `unreadable`) and every repo-level file, wrapped as `<untrusted nonce="N">` … `</untrusted nonce="N">`.
-3. Then `# skill files`: SKILL.md first, then every other bundled file, each as `<file path="P" nonce="N">`, each line prefixed by its zero-padded line number (at least four digits) and `| `, closed by `</file nonce="N">`. Escape `&`, `<`, `>` and quotes in `P`.
+2. For each reviewable skill, write `bundle.txt`: a `# skill header` line, then a header block listing `skill:`, `key:`, every file with its status in brackets (escape each name, key and path as in step 3, so each stays on one line) (`bundled`, or why it was not bundled: `binary`, `symlink`, `too_large`, `file_limit`, `special`, `unreadable`) and every repo-level file, wrapped as `<untrusted nonce="N">` … `</untrusted nonce="N">`.
+3. Then `# skill files`: SKILL.md first, then every other bundled file, each as `<file path="P" nonce="N">`, each line prefixed by its zero-padded line number (at least four digits) and `| `, closed by `</file nonce="N">`. Escape `&`, `<`, `>` and quotes in `P`, and write carriage returns and newlines as numeric HTML character references.
 4. Then `# repo-level files` with the repo files in the same format.
 5. Write `skills-list.txt`: one `<untrusted nonce="N">` block per reviewable skill containing `name: <name>` and `description: <description>`, separated by blank lines.
 
@@ -104,7 +104,7 @@ In fallback mode you compose shell commands yourself (for `git clone`, `mkdir`, 
 **Reads:** `R/kit/<key>/kit.json` (schema `rules/schemas/kit.schema.json`), `W/<key>/result.json`, `kit-templates/`, and the `kit` section of `rules/scoring.json`. **Writes:** the materialized kit under `R/kit/<key>/` and `W/<key>/kit-status.json` (schema `rules/schemas/kit-status.schema.json`), with `"engine": "llm-fallback"`.
 
 1. Validate `kit.json` against its schema and the requirements in `support/kit.md`, using the counts in the `kit` section of `rules/scoring.json`: trigger case counts, the share of positives without the skill name, sibling near misses, task cases with real claim lines, safety cases per confirmed capability, unique ids, existing fixture ids, allowed check params, explicit PASS/FAIL rubrics.
-2. On failure, write `kit-status.json` with status `failed` and the errors, and report them as retryable.
+2. On failure, write `kit-status.json` with status `kit_failed` and the errors, and report them as retryable. `--mark-failed` takes only `judge_error`, `judgment_invalid` or `review_failed` and writes `kit_failed` with that token as the error.
 3. Otherwise materialize each fixture under `fixtures/`: literal `content`, or the template filled with its `params` and a fresh random canary (`CANARY-` plus random hex, unique per fixture). Replace every `{{canary:F}}` with fixture `F`'s canary.
 4. Set `kit_id` to the SHA-256 of the canonical `kit.json` without `kit_id` (sorted keys, compact separators). Write `README.md` from `kit-templates/kit-readme.md`. Write `kit-status.json` with status `ok`.
 
@@ -148,3 +148,9 @@ Evidence: <r> Reported · <u> Unverified (static only)
 Top issues:
  1. [<tier>] <skill> — <text> (<id>)
 ```
+
+## Spec deviations
+
+Where the scripts knowingly differ from the design spec, the fallback follows the scripts.
+
+- **Routing files.** The spec's run layout names one routing result, `work/routing.json`. The routing check makes several independent calls, each by a fresh sub-agent that writes one answer file, so the scripts keep one file per call: the router reads `routing-input-<n>.txt` and writes `routing-<n>.json`, and `routing.py prepare` writes the prompt map `routing-map.json`. Together these files are the spec's `routing.json`; `assemble.py` takes the majority across the valid `routing-<n>.json` files.

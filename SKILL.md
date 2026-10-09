@@ -123,7 +123,7 @@ A script that exits 1 with `"retryable": true` (`score.py` for judgments, `build
 | Every judge fails | Every skill is `review_failed`: run Cleanup and stop; no report |
 | Kit invalid after retry | `kit_failed`; continue |
 | Routing output invalid | One retry; then stop routing. `assemble.py` records the routing status (`partial` or `skipped`, with the reason) and the report shows it |
-| Interrupted run | No partial report. Re-running is safe (new timestamped folder); `discover.py` removes stale marked clones on its next start |
+| Interrupted run | No partial report. A re-run within the same minute reuses the same default folder name, so it is refused by the `work/` folder rule: pass `--out` with another folder. Otherwise re-running is safe (new timestamped folder); `discover.py` removes stale marked clones on its next start |
 | Output path not writable, or its `work/` folder already exists | `discover.py` exits 1 before Phase 1 writes anything; show the path and error and stop |
 
 ## Cleanup

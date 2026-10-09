@@ -4,8 +4,9 @@ import unittest
 
 import _helpers  # noqa: F401  (sets sys.path)
 
-from common import load_rules, read_json, validate_against, write_json
+from common import ValidationFailed, load_rules, read_json, validate_against, write_json
 import assemble
+from scan import FLAGS
 
 SCRIPT = os.path.join(_helpers.SCRIPTS_DIR, "assemble.py")
 
@@ -22,7 +23,7 @@ def skill(name, tier="low", quality=7.0, band="adequate", level="unverified", re
         gates[g] = {"kind": "quality", "answered_by": "judge", "answer": "no", "evidence": []}
     return {"schema_version": 1, "engine": engine, "skill": name, "key": "01-" + name,
             "kind": "skill", "review_failed": tier == "unknown", "review_errors": [],
-            "inventory": {}, "exposure": "E0",
+            "inventory": dict((f, False) for f in FLAGS), "exposure": "E0",
             "categories": {"clarity": {"score": 5, "applicable": True, "blocker_capped": False,
                                        "gates": gates}},
             "quality_overall": quality, "quality_band": band, "risk_tier": tier,
@@ -225,6 +226,45 @@ class AssembleTests(unittest.TestCase):
             self.assertEqual(out["target"], "/t")
             self.assertEqual(out["engine"], "script")
             self.assertEqual(out["rollup"]["worst_tier"], "low")
+
+    def test_quality_mean_rounds_half_up(self):
+        # 7.25 is exact in binary, so round(7.25, 1) gives 7.2 (half-even); spec wants 7.3.
+        r = assemble.rollup([skill("a", quality=7.0), skill("b", quality=7.5)])
+        self.assertEqual(r["quality_mean"], 7.3)
+        r = assemble.rollup([skill("a", quality=6.0), skill("b", quality=6.5)])
+        self.assertEqual(r["quality_mean"], 6.3)
+
+    def test_malformed_result_is_an_error_not_a_crash(self):
+        with _helpers.tempdir() as tmp:
+            work = make_run(tmp, [skill("a"), skill("b")])
+            write_json(os.path.join(work, "01-b", "result.json"), {"skill": "b"})
+            with self.assertRaises(ValidationFailed) as cm:
+                assemble.assemble(work)
+            self.assertTrue(any("01-b" in e and "result.json" in e for e in cm.exception.errors),
+                            cm.exception.errors)
+            self.assertFalse(any("01-a" in e for e in cm.exception.errors))
+            r = _helpers.run_path(SCRIPT, "--work-dir", work)
+            self.assertEqual(r.returncode, 1, r.stderr)
+            self.assertNotIn("KeyError", r.stderr)
+            self.assertIn("01-b", json.loads(r.stdout)["errors"][0])
+
+    def test_unparsable_result_is_an_error(self):
+        with _helpers.tempdir() as tmp:
+            work = make_run(tmp, [skill("a")])
+            with open(os.path.join(work, "01-a", "result.json"), "w") as f:
+                f.write("[1, 2")
+            with self.assertRaises(ValidationFailed):
+                assemble.assemble(work)
+
+    def test_kit_failed_status_passes_through(self):
+        with _helpers.tempdir() as tmp:
+            work = make_run(tmp, [skill("a")])
+            write_json(os.path.join(work, "01-a", "kit-status.json"),
+                       {"schema_version": 1, "engine": "script", "skill": "a",
+                        "status": "kit_failed", "errors": ["x"]}, "kit-status")
+            out = assemble.assemble(work)
+            self.assertEqual(out["kits"], {"01-a": {"status": "kit_failed", "path": None}})
+            self.assertEqual(validate_against(out, "results"), [])
 
     def test_cli(self):
         with _helpers.tempdir() as tmp:

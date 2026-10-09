@@ -34,8 +34,9 @@ import re
 import applies_if
 import risk
 from bundle import parse_bundle
-from common import (CATEGORY_ORDER, EXIT_OK, UsageError, ValidationFailed, load_rules,
-                    read_json, round_half_up, run_main, scoring, skill_work_dir, write_json)
+from common import (CATEGORY_ORDER, EXIT_OK, MARK_FAILED_REASONS, UsageError,
+                    ValidationFailed, load_rules, read_json, round_half_up, run_main, scoring,
+                    skill_work_dir, write_json)
 from judgment import (completeness_errors, load_judgments, merge_trials, trial_agreement,
                       verify_judgment)
 from scan import FLAGS
@@ -583,11 +584,9 @@ def main(argv):
     ap = argparse.ArgumentParser(prog="score.py")
     ap.add_argument("--work-dir", required=True)
     ap.add_argument("--skill", required=True)
-    ap.add_argument("--mark-failed", default=None, metavar="REASON")
+    ap.add_argument("--mark-failed", default=None, choices=MARK_FAILED_REASONS)
     args = ap.parse_args(argv)
     if args.mark_failed is not None:
-        if not args.mark_failed.strip():
-            raise UsageError("--mark-failed needs a non-empty reason")
         result = mark_failed(args.work_dir, args.skill, args.mark_failed)
     else:
         result = score_skill(args.work_dir, args.skill)

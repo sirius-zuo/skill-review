@@ -18,7 +18,8 @@ import re
 import sys
 
 from common import (CATEGORY_ORDER, EXIT_OK, UsageError, ValidationFailed, load_manifest,
-                    load_run, read_json, reviewable_skills, run_main, scoring, write_json)
+                    load_run, read_json, reviewable_skills, round_half_up, run_main, scoring,
+                    validate_against, write_json)
 import routing
 
 # Tier severity order, highest first. The single place tier order is defined.
@@ -65,7 +66,8 @@ def rollup(skills):
         if tier_counts[t]:
             worst = t
             break
-    mean = round(sum(scores) / float(len(scores)), 1) if scores else None
+    # tenths, rounded half up like every other score (round() is half-even on exact ties)
+    mean = round_half_up(sum(scores) / float(len(scores)) * 10) / 10.0 if scores else None
     return {"worst_tier": worst, "tier_counts": tier_counts, "quality_mean": mean,
             "band_counts": band_counts, "evidence_counts": evidence}
 
@@ -200,6 +202,10 @@ def assemble(work_dir):
         res = _opt(os.path.join(work_dir, s["key"], "result.json"))
         if res is None:
             errors.append("missing or unreadable result.json for %s" % s["key"])
+            continue
+        problems = validate_against(res, "result")
+        if problems:  # treated like a missing result: never indexed, so no KeyError
+            errors.append("invalid result.json for %s (%s)" % (s["key"], "; ".join(problems[:3])))
             continue
         keys.append(s["key"])
         skills.append(res)

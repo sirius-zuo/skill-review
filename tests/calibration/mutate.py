@@ -42,12 +42,45 @@ def _frontmatter_span(text):
     return m.end() if m else 0
 
 
+def _set_name(skill_md, name):
+    text = _read(skill_md)
+    end = _frontmatter_span(text)
+    head, n = re.subn(r"^name:.*$", "name: " + name, text[:end], count=1, flags=re.M)
+    if n != 1:
+        raise ValueError("SKILL.md frontmatter has no name to align")
+    _write(skill_md, head + text[end:])
+
+
+def prepare_base(base_dir, mutation, out_dir):
+    """Copy base_dir to out_dir as the comparison base for this mutation.
+
+    For rename_folder the copy's frontmatter name is set to its folder name first, so the
+    base never trips L-NAME-03 and only the renamed mutant can (a base whose name already
+    differs from its folder, like good-skill, would make the mutation undetectable).
+    """
+    if os.path.lexists(out_dir):
+        raise ValueError("output exists: %s" % out_dir)
+    shutil.copytree(base_dir, out_dir, symlinks=True)
+    if mutation["op"] == "rename_folder":
+        _set_name(os.path.join(out_dir, "SKILL.md"), os.path.basename(out_dir.rstrip(os.sep)))
+    return out_dir
+
+
 def apply_mutation(base_dir, mutation, out_dir):
     """Copy base_dir to out_dir, apply the mutation, return the mutated skill dir."""
     op = mutation["op"]
     args = mutation.get("args", {})
     if op == "rename_folder":
+        # Align name with the original folder (the prepared base), then rename the folder.
+        folder = os.path.basename(out_dir.rstrip(os.sep))
+        if folder == args["new_name"]:
+            raise ValueError("rename_folder needs a new name that differs from the folder")
         out_dir = os.path.join(os.path.dirname(out_dir), args["new_name"])
+        if os.path.lexists(out_dir):
+            raise ValueError("output exists: %s" % out_dir)
+        shutil.copytree(base_dir, out_dir, symlinks=True)
+        _set_name(os.path.join(out_dir, "SKILL.md"), folder)
+        return out_dir
     if os.path.lexists(out_dir):
         raise ValueError("output exists: %s" % out_dir)
     shutil.copytree(base_dir, out_dir, symlinks=True)
@@ -83,8 +116,6 @@ def apply_mutation(base_dir, mutation, out_dir):
         if os.path.exists(_inside(out_dir, target)):
             raise ValueError("break_link target exists: " + target)
         _write(skill_md, _read(skill_md) + args["text"])
-    elif op == "rename_folder":
-        pass
     elif op == "move_script":
         src = _inside(out_dir, args["from"])
         dst = _inside(out_dir, args["to"])

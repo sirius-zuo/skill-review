@@ -382,13 +382,13 @@ class ScoreTests(unittest.TestCase):
         with tempdir() as t:
             Skill(drop_gates=["TRG-CG1"]).write(t)
             p = run_script("score.py", "--work-dir", t, "--skill", KEY,
-                           "--mark-failed", "judge output invalid after retry")
+                           "--mark-failed", "judgment_invalid")
             self.assertEqual(p.returncode, 0, p.stderr + p.stdout)
             r = read_json(os.path.join(t, KEY, "result.json"))
             self.assertTrue(r["review_failed"])
             self.assertEqual(r["risk_tier"], "unknown")
             self.assertIsNone(r["risk_rule"])
-            self.assertEqual(r["review_errors"], ["judge output invalid after retry"])
+            self.assertEqual(r["review_errors"], ["judgment_invalid"])
             self.assertEqual(validate_against(r, "result"), [])
         # a critical hit still sets the tier, even if a judge called it benign
         s = Skill(hits=[hit("H001", "SEC-RC-PIPE-SH", "remote-code", "critical")],
@@ -398,6 +398,22 @@ class ScoreTests(unittest.TestCase):
             r = score.mark_failed(t, KEY, "boom")
             self.assertEqual((r["risk_tier"], r["risk_rule"]), ("critical", "C1"))
             self.assertEqual(r["recommendations"][0]["id"], "H001")
+
+    def test_mark_failed_rejects_unknown_reason(self):
+        from common import MARK_FAILED_REASONS
+        self.assertEqual(MARK_FAILED_REASONS, ("judge_error", "judgment_invalid", "review_failed"))
+        with tempdir() as t:
+            Skill().write(t)
+            for bad in ("judge output invalid after retry", "", "ERROR: $(whoami)"):
+                p = run_script("score.py", "--work-dir", t, "--skill", KEY, "--mark-failed", bad)
+                self.assertEqual(p.returncode, 2, bad)
+                self.assertIn("invalid choice", p.stderr)
+                self.assertFalse(os.path.exists(os.path.join(t, KEY, "result.json")))
+            for ok in MARK_FAILED_REASONS:
+                p = run_script("score.py", "--work-dir", t, "--skill", KEY, "--mark-failed", ok)
+                self.assertEqual(p.returncode, 0, p.stderr + p.stdout)
+                self.assertEqual(read_json(os.path.join(t, KEY, "result.json"))["review_errors"],
+                                 [ok])
 
     def test_l_cc_02(self):
         s = Skill(facts=facts_of(irreversible=True),

@@ -12,7 +12,7 @@ tools (metrics, mutations, tar extraction guard); no test uses the network.
 | `corpus.json` | The reference skills with expected tiers and bands, written before any run. Records the pinned `anthropics/skills` commit. |
 | `fetch_corpus.py --dest DIR` | Downloads the pinned commit into a new, empty directory outside this repository and extracts only the corpus skills. |
 | `mutations.json` | MU-01 to MU-13: base skill, transformation, expected effect. |
-| `mutate.py --corpus-dir D --out DIR` | Applies every mutation to a temp copy of its base. Never touches the base. |
+| `mutate.py --corpus-dir D --out DIR` | Applies every mutation to a temp copy of its base. Never touches the base. For `rename_folder` (MU-09) the copy's `name` is first set to its original folder name, so only the rename can trip `L-NAME-03` (`prepare_base` builds that aligned base for comparison). |
 | `score_calibration.py` | Prints the metrics against S1 to S5 with PASS or FAIL. |
 | `labels/` | Maintainer-written expected gate answers (see `labels/README.md`). |
 
