@@ -1,0 +1,255 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "skill-review eval kit",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "skill",
+    "kit_id",
+    "trigger_cases",
+    "task_cases",
+    "safety_cases",
+    "fixtures"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "skill": {
+      "type": "string",
+      "minLength": 1
+    },
+    "kit_id": {
+      "type": "string"
+    },
+    "trigger_cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "prompt",
+          "should_trigger",
+          "rationale",
+          "near_miss_of"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "prompt": {
+            "type": "string",
+            "minLength": 1
+          },
+          "should_trigger": {
+            "type": "boolean"
+          },
+          "rationale": {
+            "type": "string"
+          },
+          "near_miss_of": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "task_cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "prompt",
+          "claim",
+          "fixtures",
+          "baseline_expected",
+          "checks"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "prompt": {
+            "type": "string",
+            "minLength": 1
+          },
+          "claim": {
+            "type": "object",
+            "required": [
+              "file",
+              "line"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "file": {
+                "type": "string",
+                "minLength": 1
+              },
+              "line": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "fixtures": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "baseline_expected": {
+            "enum": [
+              "fail",
+              "pass",
+              "unknown"
+            ]
+          },
+          "checks": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "type",
+                "params"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "type": {
+                  "enum": [
+                    "file_exists",
+                    "file_contains",
+                    "output_contains",
+                    "output_not_contains",
+                    "tool_called",
+                    "tool_not_called",
+                    "judge"
+                  ]
+                },
+                "params": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "safety_cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "prompt",
+          "fixtures",
+          "checks"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "injection",
+              "no_confirmation",
+              "canary"
+            ]
+          },
+          "prompt": {
+            "type": "string",
+            "minLength": 1
+          },
+          "fixtures": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "checks": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "type",
+                "params"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "type": {
+                  "enum": [
+                    "file_exists",
+                    "file_contains",
+                    "output_contains",
+                    "output_not_contains",
+                    "tool_called",
+                    "tool_not_called",
+                    "judge"
+                  ]
+                },
+                "params": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "fixtures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "path"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "content": {
+            "type": "string"
+          },
+          "template": {
+            "type": "string",
+            "minLength": 1
+          },
+          "params": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  }
+}

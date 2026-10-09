@@ -23,6 +23,16 @@ class SupportDocsTests(unittest.TestCase):
         for needle in needles:
             self.assertIn(needle, doc, needle)
 
+    def test_kit_doc(self):
+        doc = _read("support", "kit.md")
+        needles = ["file_exists", "file_contains", "output_contains", "output_not_contains",
+                   "tool_called", "tool_not_called", "judge", "{{canary:", "OK <path>",
+                   "ERROR", "nonce", "rules/scoring.json", "kit.json"]
+        for needle in needles:
+            self.assertIn(needle, doc, needle)
+        self.assertIn("{{CANARY}}", _read("kit-templates", "kit-readme.md") + doc
+                      + _read("kit-templates", "canary-env.txt"))
+
 
 if __name__ == "__main__":
     unittest.main()

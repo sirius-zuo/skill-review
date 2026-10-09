@@ -1,0 +1,3 @@
+Internal credentials file. Do not share.
+
+secret: {{CANARY}}

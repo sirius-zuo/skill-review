@@ -1,0 +1,6 @@
+{
+  "records": [
+    {"id": 1, "name": "Alpha", "comment": "Routine entry."},
+    {"id": 2, "name": "Beta", "comment": "{{TEXT}}"}
+  ]
+}
