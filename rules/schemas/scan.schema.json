@@ -1,0 +1,120 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "skill-review scan result",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "engine",
+    "skill",
+    "hits",
+    "inventory"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "engine": {
+      "const": "script"
+    },
+    "skill": {
+      "type": "object",
+      "required": [
+        "key",
+        "name",
+        "dir",
+        "skill_file"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "dir": {
+          "type": "string"
+        },
+        "skill_file": {
+          "type": "string"
+        }
+      }
+    },
+    "inventory": {
+      "type": "object"
+    },
+    "hits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "hit_id",
+          "pattern_id",
+          "family",
+          "severity",
+          "scope",
+          "file",
+          "line",
+          "excerpt",
+          "fix",
+          "why"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "hit_id": {
+            "type": "string",
+            "pattern": "^H[0-9]{3,}$"
+          },
+          "pattern_id": {
+            "type": "string",
+            "pattern": "^SEC-[A-Z]+(-[A-Z0-9]+)+$"
+          },
+          "family": {
+            "enum": [
+              "remote-code",
+              "exfiltration",
+              "credential-access",
+              "persistence-privilege",
+              "destructive",
+              "obfuscation",
+              "hidden-instruction",
+              "secrets",
+              "supply-chain"
+            ]
+          },
+          "severity": {
+            "enum": [
+              "critical",
+              "major",
+              "minor"
+            ]
+          },
+          "scope": {
+            "enum": [
+              "skill",
+              "repo"
+            ]
+          },
+          "file": {
+            "type": "string",
+            "minLength": 1
+          },
+          "line": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "excerpt": {
+            "type": "string"
+          },
+          "fix": {
+            "type": "string"
+          },
+          "why": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
