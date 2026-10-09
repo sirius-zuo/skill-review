@@ -15,7 +15,10 @@
       "const": 1
     },
     "engine": {
-      "const": "script"
+      "enum": [
+        "script",
+        "llm-fallback"
+      ]
     },
     "skill": {
       "type": "object",

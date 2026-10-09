@@ -1,10 +1,13 @@
 """SKILL.md orchestrator, fallback coverage and v1 removal (Python 3.7 stdlib only)."""
+import glob
+import json
 import os
 import re
 import unittest
 
 import _helpers  # noqa: F401  (sets sys.path)
 from frontmatter import parse_skill_file
+from jsonschema_lite import validate
 
 ROOT = _helpers.ROOT_DIR
 SPEC = os.path.join("docs", "superpowers", "specs", "2026-10-08-skill-review-v2-design.md")
@@ -132,6 +135,25 @@ class SkillMdTests(unittest.TestCase):
             body = sections[head]
             self.assertRegex(body, r"rules/(schemas/)?[a-z-]+(\.schema)?\.json", head)
             self.assertIn("llm-fallback", body, head)
+
+    def test_every_output_schema_accepts_both_engines(self):
+        # Spec 4.4: fallback outputs carry "llm-fallback". Checked on each schema's engine
+        # subschema with the real validator (building full valid instances is too heavy).
+        paths = sorted(glob.glob(os.path.join(ROOT, "rules", "schemas", "*.schema.json")))
+        with_engine = []
+        for path in paths:
+            with open(path, encoding="utf-8") as f:
+                schema = json.load(f)
+            sub = (schema.get("properties") or {}).get("engine")
+            if sub is None:
+                continue
+            name = os.path.basename(path)
+            with_engine.append(name)
+            self.assertIn("engine", schema.get("required", []), name)
+            for ok in ("script", "llm-fallback"):
+                self.assertEqual(validate(ok, sub), [], "%s rejects %s" % (name, ok))
+            self.assertNotEqual(validate("llm", sub), [], "%s accepts any engine" % name)
+        self.assertGreaterEqual(len(with_engine), 10, with_engine)
 
     def test_fallback_restates_no_rule_values(self):
         doc = read("support", "fallback.md")
