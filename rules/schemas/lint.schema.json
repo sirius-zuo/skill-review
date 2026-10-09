@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "skill-review lint result",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "engine",
+    "skill",
+    "meta",
+    "findings"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "engine": {
+      "enum": [
+        "script",
+        "llm-fallback"
+      ]
+    },
+    "skill": {
+      "type": "object",
+      "required": [
+        "key",
+        "name",
+        "dir",
+        "skill_file"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "dir": {
+          "type": "string"
+        },
+        "skill_file": {
+          "type": "string"
+        }
+      }
+    },
+    "meta": {
+      "type": "object"
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "rule_id",
+          "severity",
+          "category",
+          "heuristic",
+          "platform",
+          "file",
+          "line",
+          "message",
+          "fix",
+          "why"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "rule_id": {
+            "type": "string",
+            "pattern": "^L-[A-Z]+-[0-9]{2}$"
+          },
+          "severity": {
+            "enum": [
+              "blocker",
+              "major",
+              "minor"
+            ]
+          },
+          "category": {
+            "type": "string",
+            "minLength": 1
+          },
+          "heuristic": {
+            "type": "boolean"
+          },
+          "platform": {
+            "enum": [
+              "any",
+              "claude-code"
+            ]
+          },
+          "file": {
+            "type": "string",
+            "minLength": 1
+          },
+          "line": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          },
+          "fix": {
+            "type": "string"
+          },
+          "why": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

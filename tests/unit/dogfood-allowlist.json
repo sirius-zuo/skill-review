@@ -1,0 +1,224 @@
+{
+  "entries": [
+    {
+      "pattern_id": "SEC-CA-AWS",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-CA-BROWSER",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-CA-KEYCHAIN",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-CA-NETRC",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-CA-SSH",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-DE-DISK",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-DE-DROP",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-DE-FORCE-PUSH",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-DE-RM-RF",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-EX-CURL-DATA",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-EX-DNS",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-EX-DROP-SITE",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-EX-HTTP-POST",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-EX-NETCAT",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-HI-CONCEAL",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-OB-B64-DOC",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-OB-DECODE-EXEC",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-PP-AGENT-CONFIG",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-PP-CHMOD777",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-PP-CHOWN-ROOT",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-PP-CRON",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-PP-LAUNCH",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-PP-SHELL-RC",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-PP-SUDO",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-RC-IEX",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-RC-PIPE-SH",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-RC-PROC-SUB",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-RC-URL-INSTALL",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-SC-DOWNLOAD-EXEC",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-SC-RUNTIME-CLONE",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-SE-AWS",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-SE-GITHUB",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-SE-OPENAI",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-SE-PRIVKEY",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-SE-SLACK",
+      "path_glob": "rules/security-patterns.json",
+      "reason": "The pattern catalogue holds the dangerous strings as positive and negative samples."
+    },
+    {
+      "pattern_id": "SEC-CA-SSH",
+      "path_glob": "tests/**",
+      "reason": "Unit tests and fixtures contain intentional hostile samples."
+    },
+    {
+      "pattern_id": "SEC-EX-CURL-DATA",
+      "path_glob": "tests/**",
+      "reason": "Unit tests and fixtures contain intentional hostile samples."
+    },
+    {
+      "pattern_id": "SEC-EX-DROP-SITE",
+      "path_glob": "tests/**",
+      "reason": "Unit tests and fixtures contain intentional hostile samples."
+    },
+    {
+      "pattern_id": "SEC-HI-BIDI",
+      "path_glob": "tests/**",
+      "reason": "Unit tests and fixtures contain intentional hostile samples."
+    },
+    {
+      "pattern_id": "SEC-HI-BOM-MID",
+      "path_glob": "tests/**",
+      "reason": "Unit tests and fixtures contain intentional hostile samples."
+    },
+    {
+      "pattern_id": "SEC-HI-ZERO-WIDTH",
+      "path_glob": "tests/**",
+      "reason": "Unit tests and fixtures contain intentional hostile samples."
+    },
+    {
+      "pattern_id": "SEC-RC-PIPE-SH",
+      "path_glob": "tests/**",
+      "reason": "Unit tests and fixtures contain intentional hostile samples."
+    },
+    {
+      "pattern_id": "SEC-SE-AWS",
+      "path_glob": "tests/**",
+      "reason": "Unit tests and fixtures contain intentional hostile samples."
+    },
+    {
+      "pattern_id": "SEC-HI-CONCEAL",
+      "path_glob": "tests/**",
+      "reason": "tests/calibration/mutations.json carries concealment text as the intended input of mutation MU-03; it is a calibration data file, not a skill."
+    }
+  ]
+}

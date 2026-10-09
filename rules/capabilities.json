@@ -1,0 +1,18 @@
+{
+ "scripts": {"rules": [], "families": [], "default": "false"},
+ "shell": {"rules": [{"id": "CAP-SHELL-1", "where": "skill_md", "regex": "^[ \\t]{0,3}(`{3,}|~{3,})[ \\t]{0,10}(bash|sh|shell|zsh|console)\\b", "value": "true"}, {"id": "CAP-SHELL-2", "where": "skill_md", "regex": "^[ \\t]{0,3}!`", "value": "true"}, {"id": "CAP-SHELL-3", "where": "skill_md", "regex": "^[ \\t]{0,3}(`{3,}|~{3,})!", "value": "true"}], "families": [], "default": "false"},
+ "network_read": {"rules": [{"id": "CAP-NETWORK_READ-1", "where": "executable", "regex": "https?://(?!localhost|127\\.0\\.0\\.1)", "value": "true"}, {"id": "CAP-NETWORK_READ-2", "where": "any", "regex": "requests\\.get|urllib\\.request|fetch\\(|\\bcurl\\s|\\bwget\\s", "value": "true"}, {"id": "CAP-NETWORK_READ-3", "where": "skill_md_commands", "regex": "https?://(?!localhost|127\\.0\\.0\\.1)", "value": "true"}, {"id": "CAP-NETWORK_READ-4", "where": "skill_md", "regex": "https?://(?!localhost|127\\.0\\.0\\.1)", "value": "suspected"}], "families": [], "default": "false"},
+ "network_write": {"rules": [{"id": "CAP-NETWORK_WRITE-1", "where": "any", "regex": "requests\\.(post|put|patch)|method:[ \\t]{0,20}['\"](POST|PUT|PATCH)|\\bcurl\\b[^\\n]{0,300}\\s(-d|--data|-F|-T|-X[ \\t]{0,10}(POST|PUT))", "value": "true"}, {"id": "CAP-NETWORK_WRITE-2", "where": "skill_md", "regex": "\\b(upload|uploads|sftp|scp|rsync)\\b", "value": "suspected"}], "families": ["exfiltration"], "default": "false"},
+ "file_write": {"rules": [{"id": "CAP-FILE_WRITE-1", "where": "executable", "regex": "open\\([^)\\n]{0,200}['\"][wa]\\+?['\"]|writeFile|write_text|shutil\\.(copy|move)", "value": "true"}, {"id": "CAP-FILE_WRITE-3", "where": "shell_commands", "regex": "(?<![-=<>])>>?(?![=&>])(?![ \\t]{0,20}/dev/null(?![\\w./$~-]))[ \\t]{0,20}[\\w./$~-]{1,200}", "value": "true"}, {"id": "CAP-FILE_WRITE-4", "where": "executable_non_shell", "regex": "(?<![-=<>])>>?(?![=&>])(?![ \\t]{0,20}/dev/null(?![\\w./$~-]))[ \\t]{0,20}[\\w./$~-]{1,200}", "value": "suspected"}, {"id": "CAP-FILE_WRITE-2", "where": "skill_md", "regex": "\\b(create|save|write|generate)s?\\b[^.\\n]{0,40}\\b(file|report|document)", "value": "suspected"}], "families": [], "default": "false"},
+ "irreversible": {"rules": [{"id": "CAP-IRREVERSIBLE-1", "where": "skill_md", "regex": "\\b(deploy|push|publish|send|delete|remove|drop|pay|transfer|merge)\\b", "value": "suspected"}], "families": ["destructive"], "default": "false"},
+ "credentials": {"rules": [{"id": "CAP-CREDENTIALS-1", "where": "any", "regex": "\\b(token|api key|apikey|password|secret|credential)s?\\b", "value": "suspected"}], "families": ["credential-access", "secrets"], "default": "false"},
+ "invokes_agents": {"rules": [{"id": "CAP-INVOKES_AGENTS-1", "where": "skill_md", "regex": "\\b(sub-?agents?|Agent tool|Task tool|Skill tool)\\b", "value": "suspected"}], "families": [], "default": "false"},
+ "ingests_untrusted": {"rules": [], "families": [], "default": "unknown"},
+ "multi_step": {"rules": [{"id": "CAP-MULTI_STEP-1", "where": "skill_md", "regex": "^[ \\t]{0,3}#{1,6}[ \\t][^\\n]{0,200}\\b(Step|Phase)\\b", "value": "suspected"}], "families": [], "default": "unknown"},
+ "fans_out": {"rules": [{"id": "CAP-FANS_OUT-1", "where": "skill_md", "regex": "\\b(sub-?agents?|for each|in parallel)\\b", "value": "suspected"}], "families": [], "default": "unknown"},
+ "composable_output": {"rules": [], "families": [], "default": "unknown"},
+ "long_running": {"rules": [], "families": [], "default": "unknown"},
+ "has_siblings": {"rules": [], "families": [], "default": "false"},
+ "large_body": {"rules": [], "families": [], "default": "false"},
+ "has_references": {"rules": [], "families": [], "default": "false"}
+}

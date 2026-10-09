@@ -1,0 +1,357 @@
+{
+  "manifest": {
+    "engine": "script",
+    "repo_files": [],
+    "root": "<ROOT>",
+    "schema_version": 1,
+    "self_review": false,
+    "skills": [
+      {
+        "dir": "deployer",
+        "eval_result_files": [],
+        "files": [
+          {
+            "binary": false,
+            "bundled": true,
+            "hidden": false,
+            "path": "deployer/SKILL.md",
+            "size": 205,
+            "skip_reason": null,
+            "symlink": null
+          },
+          {
+            "binary": false,
+            "bundled": true,
+            "hidden": false,
+            "path": "deployer/weird name $(echo x);`y`.txt",
+            "size": 29,
+            "skip_reason": null,
+            "symlink": null
+          }
+        ],
+        "key": "00-file-deployer",
+        "kind": "skill",
+        "name": "file-deployer",
+        "parent": null,
+        "references": [],
+        "skill_file": "deployer/SKILL.md"
+      },
+      {
+        "dir": "formatter",
+        "eval_result_files": [],
+        "files": [
+          {
+            "binary": false,
+            "bundled": true,
+            "hidden": false,
+            "path": "formatter/SKILL.md",
+            "size": 694,
+            "skip_reason": null,
+            "symlink": null
+          },
+          {
+            "binary": false,
+            "bundled": true,
+            "hidden": false,
+            "path": "formatter/notes-latin1.txt",
+            "size": 18,
+            "skip_reason": null,
+            "symlink": null
+          }
+        ],
+        "key": "01-text-formatter",
+        "kind": "skill",
+        "name": "text-formatter",
+        "parent": null,
+        "references": [],
+        "skill_file": "formatter/SKILL.md"
+      }
+    ],
+    "source": {
+      "clone_dir": null,
+      "type": "local",
+      "url": null
+    },
+    "warnings": []
+  },
+  "skills": {
+    "00-file-deployer": {
+      "ingest": {
+        "engine": "script",
+        "has_baseline": false,
+        "has_valid_result": false,
+        "invalid": [],
+        "results": [],
+        "schema_version": 1,
+        "skill": {
+          "dir": "deployer",
+          "key": "00-file-deployer",
+          "name": "file-deployer",
+          "skill_file": "deployer/SKILL.md"
+        }
+      },
+      "lint": {
+        "engine": "script",
+        "findings": [
+          {
+            "category": "trigger",
+            "file": "deployer/SKILL.md",
+            "fix": "Rename the folder or the `name` so they match.",
+            "heuristic": false,
+            "line": 1,
+            "message": "The `name` does not match the skill's folder name. (name 'file-deployer', folder 'deployer')",
+            "platform": "any",
+            "rule_id": "L-NAME-03",
+            "severity": "minor",
+            "why": "The spec expects the name to equal the parent directory name; a mismatch confuses loaders and readers."
+          },
+          {
+            "category": "trigger",
+            "file": "deployer/SKILL.md",
+            "fix": "Expand it to say what the skill does and when to use it.",
+            "heuristic": false,
+            "line": 1,
+            "message": "The `description` is shorter than 40 characters. (24 characters, minimum 40)",
+            "platform": "any",
+            "rule_id": "L-DESC-06",
+            "severity": "major",
+            "why": "Very short descriptions give the model too little to match against."
+          },
+          {
+            "category": "trigger",
+            "file": "deployer/SKILL.md",
+            "fix": "Add a clause saying when the skill should be used.",
+            "heuristic": true,
+            "line": 1,
+            "message": "The `description` has no \"when\" clause (use when, when the user, whenever, use this, use for).",
+            "platform": "any",
+            "rule_id": "L-DESC-07",
+            "severity": "minor",
+            "why": "Trigger conditions in the description improve selection accuracy."
+          }
+        ],
+        "meta": {
+          "description": "deploys files to servers",
+          "name": "file-deployer"
+        },
+        "schema_version": 1,
+        "skill": {
+          "dir": "deployer",
+          "key": "00-file-deployer",
+          "name": "file-deployer",
+          "skill_file": "deployer/SKILL.md"
+        }
+      },
+      "scan": {
+        "engine": "script",
+        "hits": [],
+        "inventory": {
+          "composable_output": {
+            "sources": [],
+            "value": "unknown"
+          },
+          "credentials": {
+            "sources": [],
+            "value": "false"
+          },
+          "fans_out": {
+            "sources": [],
+            "value": "unknown"
+          },
+          "file_write": {
+            "sources": [],
+            "value": "false"
+          },
+          "has_references": {
+            "sources": [],
+            "value": "false"
+          },
+          "has_siblings": {
+            "sources": [
+              "CAP-HAS_SIBLINGS-1"
+            ],
+            "value": "true"
+          },
+          "ingests_untrusted": {
+            "sources": [],
+            "value": "unknown"
+          },
+          "invokes_agents": {
+            "sources": [],
+            "value": "false"
+          },
+          "irreversible": {
+            "sources": [
+              "CAP-IRREVERSIBLE-1"
+            ],
+            "value": "suspected"
+          },
+          "large_body": {
+            "sources": [],
+            "value": "false"
+          },
+          "long_running": {
+            "sources": [],
+            "value": "unknown"
+          },
+          "multi_step": {
+            "sources": [
+              "CAP-MULTI_STEP-2"
+            ],
+            "value": "suspected"
+          },
+          "network_read": {
+            "sources": [],
+            "value": "false"
+          },
+          "network_write": {
+            "sources": [
+              "CAP-NETWORK_WRITE-2"
+            ],
+            "value": "suspected"
+          },
+          "scripts": {
+            "sources": [],
+            "value": "false"
+          },
+          "shell": {
+            "sources": [],
+            "value": "false"
+          }
+        },
+        "schema_version": 1,
+        "skill": {
+          "dir": "deployer",
+          "key": "00-file-deployer",
+          "name": "file-deployer",
+          "skill_file": "deployer/SKILL.md"
+        }
+      }
+    },
+    "01-text-formatter": {
+      "ingest": {
+        "engine": "script",
+        "has_baseline": false,
+        "has_valid_result": false,
+        "invalid": [],
+        "results": [],
+        "schema_version": 1,
+        "skill": {
+          "dir": "formatter",
+          "key": "01-text-formatter",
+          "name": "text-formatter",
+          "skill_file": "formatter/SKILL.md"
+        }
+      },
+      "lint": {
+        "engine": "script",
+        "findings": [
+          {
+            "category": "trigger",
+            "file": "formatter/SKILL.md",
+            "fix": "Rename the folder or the `name` so they match.",
+            "heuristic": false,
+            "line": 1,
+            "message": "The `name` does not match the skill's folder name. (name 'text-formatter', folder 'formatter')",
+            "platform": "any",
+            "rule_id": "L-NAME-03",
+            "severity": "minor",
+            "why": "The spec expects the name to equal the parent directory name; a mismatch confuses loaders and readers."
+          }
+        ],
+        "meta": {
+          "description": "Use when the user asks to format, reformat, or clean up plain text — fixing whitespace, standardizing punctuation, or applying a specified style. Do NOT use for code formatting or markdown rendering.",
+          "name": "text-formatter"
+        },
+        "schema_version": 1,
+        "skill": {
+          "dir": "formatter",
+          "key": "01-text-formatter",
+          "name": "text-formatter",
+          "skill_file": "formatter/SKILL.md"
+        }
+      },
+      "scan": {
+        "engine": "script",
+        "hits": [],
+        "inventory": {
+          "composable_output": {
+            "sources": [],
+            "value": "unknown"
+          },
+          "credentials": {
+            "sources": [],
+            "value": "false"
+          },
+          "fans_out": {
+            "sources": [],
+            "value": "unknown"
+          },
+          "file_write": {
+            "sources": [],
+            "value": "false"
+          },
+          "has_references": {
+            "sources": [],
+            "value": "false"
+          },
+          "has_siblings": {
+            "sources": [
+              "CAP-HAS_SIBLINGS-1"
+            ],
+            "value": "true"
+          },
+          "ingests_untrusted": {
+            "sources": [],
+            "value": "unknown"
+          },
+          "invokes_agents": {
+            "sources": [],
+            "value": "false"
+          },
+          "irreversible": {
+            "sources": [
+              "CAP-IRREVERSIBLE-1"
+            ],
+            "value": "suspected"
+          },
+          "large_body": {
+            "sources": [],
+            "value": "false"
+          },
+          "long_running": {
+            "sources": [],
+            "value": "unknown"
+          },
+          "multi_step": {
+            "sources": [],
+            "value": "unknown"
+          },
+          "network_read": {
+            "sources": [],
+            "value": "false"
+          },
+          "network_write": {
+            "sources": [],
+            "value": "false"
+          },
+          "scripts": {
+            "sources": [],
+            "value": "false"
+          },
+          "shell": {
+            "sources": [],
+            "value": "false"
+          }
+        },
+        "schema_version": 1,
+        "skill": {
+          "dir": "formatter",
+          "key": "01-text-formatter",
+          "name": "text-formatter",
+          "skill_file": "formatter/SKILL.md"
+        }
+      }
+    }
+  }
+}

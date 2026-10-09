@@ -1,0 +1,9 @@
+Skill review complete — 3 skills
+Report:   /runs/r1/report.html     Kits: /runs/r1/kit/
+Risk:     0 Critical · 1 High · 1 Medium · 1 Low   (worst: alpha)
+Quality:  1 Strong · 1 Adequate · 1 Weak
+Evidence: 1 Reported · 2 Unverified (static only)
+Top issues:
+ 1. [high] alpha — Remove the curl | sh install step (G-SAFE-01)
+ 2. [high] alpha — Pin the downloaded script (H001)
+ 3. [medium] gamma — Define terms (G-CLR-03)

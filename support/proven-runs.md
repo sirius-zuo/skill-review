@@ -1,10 +1,29 @@
 # Proven Runs
 
-Log of verified end-to-end executions. Append a new entry after each real run.
+Log of verified end-to-end executions of skill-review v2. Append one entry under "Runs" after each real run, using the entry format below. Calibration runs are recorded here too.
 
----
+## Entry format
 
-## Run 1 — 2026-05-15
+Each entry is a `### Run <n> — <YYYY-MM-DD>` heading followed by these fields:
+
+- **Date:** the date of the run (`YYYY-MM-DD`).
+- **Target:** the reviewed path or GitHub URL, with the commit SHA when known.
+- **Model:** the model (and platform) that ran the orchestrator and the judge, kit and routing sub-agents. Record every model family used.
+- **Engine:** `script` or `llm-fallback`, and the steps that used the fallback, if any. Fallback runs are never used as a calibration baseline.
+- **Trials:** the `--trials` value.
+- **Tiers / Bands:** the risk tier (with the matched risk rule id) and quality band per skill.
+- **Calibration metrics:** for calibration runs, the output of `score_calibration.py`: tier and band matches, deterministic and judge mutation detection rates, Cohen's κ and agreement, trial agreement, quote-failure rate, tier stability. Write `n/a` for ordinary runs.
+- **Expectation changes:** any change to a calibration expectation, with the written reason. Write `none` when nothing changed.
+
+## Runs
+
+No v2 runs recorded yet.
+
+## Legacy rubric — not comparable
+
+The runs below used the v1 pipeline: thirteen documentation-centred categories, static score ceilings and simulated dynamic testing. Their scores and risk levels are not comparable with v2 verdicts and must not be used as a baseline.
+
+### Run 1 — 2026-05-15
 
 - **Input:** skill-review project root (self-review)
 - **Skills reviewed:** 1 (skill-review)
@@ -19,7 +38,7 @@ Log of verified end-to-end executions. Append a new entry after each real run.
 
 ---
 
-## Run 2 — 2026-05-16
+### Run 2 — 2026-05-16
 
 - **Input:** skill-review project root (self-review)
 - **Skills reviewed:** 1 (skill-review)
@@ -34,7 +53,7 @@ Log of verified end-to-end executions. Append a new entry after each real run.
 
 ---
 
-## Run 3 — 2026-05-16
+### Run 3 — 2026-05-16
 
 - **Input:** skill-review project root (self-review)
 - **Skills reviewed:** 1 (skill-review)

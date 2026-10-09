@@ -1,0 +1,280 @@
+{
+  "schema_version": 1,
+  "rules": [
+    {
+      "id": "L-FM-01",
+      "severity": "blocker",
+      "category": "trigger",
+      "heuristic": false,
+      "platform": "any",
+      "stage": "lint",
+      "message": "Frontmatter is missing or cannot be parsed.",
+      "fix": "Start SKILL.md with a closed YAML frontmatter block (--- ... ---) using plain scalars, quoted strings, block scalars or inline lists.",
+      "why": "Without parseable frontmatter the skill has no name or description, so it cannot be discovered or triggered."
+    },
+    {
+      "id": "L-NAME-01",
+      "severity": "major",
+      "category": "trigger",
+      "heuristic": false,
+      "platform": "any",
+      "stage": "lint",
+      "message": "The `name` field is missing.",
+      "fix": "Add a `name` field to the frontmatter.",
+      "why": "The name identifies the skill and is required by the Agent Skills spec."
+    },
+    {
+      "id": "L-NAME-02",
+      "severity": "major",
+      "category": "trigger",
+      "heuristic": false,
+      "platform": "any",
+      "stage": "lint",
+      "message": "The `name` is not a valid skill name (max 64 characters, only a-z, 0-9 and hyphens, no leading, trailing or doubled hyphen).",
+      "fix": "Rename to lowercase letters, digits and single hyphens, at most 64 characters.",
+      "why": "Invalid names are rejected or mishandled by skill loaders."
+    },
+    {
+      "id": "L-NAME-03",
+      "severity": "minor",
+      "category": "trigger",
+      "heuristic": false,
+      "platform": "any",
+      "stage": "lint",
+      "message": "The `name` does not match the skill's folder name.",
+      "fix": "Rename the folder or the `name` so they match.",
+      "why": "The spec expects the name to equal the parent directory name; a mismatch confuses loaders and readers."
+    },
+    {
+      "id": "L-NAME-04",
+      "severity": "major",
+      "category": "trigger",
+      "heuristic": false,
+      "platform": "any",
+      "stage": "lint",
+      "message": "The `name` contains a reserved word (`anthropic` or `claude`).",
+      "fix": "Choose a name without `anthropic` or `claude`.",
+      "why": "Those words are reserved and may be rejected."
+    },
+    {
+      "id": "L-NAME-05",
+      "severity": "minor",
+      "category": "trigger",
+      "heuristic": false,
+      "platform": "any",
+      "stage": "lint",
+      "message": "The `name` is vague (helper, utils, tools, documents, data or files).",
+      "fix": "Use a specific name that says what the skill does.",
+      "why": "Vague names make skills hard to tell apart and to select."
+    },
+    {
+      "id": "L-DESC-01",
+      "severity": "blocker",
+      "category": "trigger",
+      "heuristic": false,
+      "platform": "any",
+      "stage": "lint",
+      "message": "The `description` is missing or empty.",
+      "fix": "Write a description of what the skill does and when to use it.",
+      "why": "The description is what the model uses to decide whether to load the skill."
+    },
+    {
+      "id": "L-DESC-02",
+      "severity": "major",
+      "category": "trigger",
+      "heuristic": false,
+      "platform": "any",
+      "stage": "lint",
+      "message": "The `description` is longer than 1024 characters.",
+      "fix": "Shorten the description to 1024 characters or fewer.",
+      "why": "Over-long descriptions are truncated or rejected and bloat every session's context."
+    },
+    {
+      "id": "L-DESC-03",
+      "severity": "minor",
+      "category": "trigger",
+      "heuristic": false,
+      "platform": "claude-code",
+      "stage": "lint",
+      "message": "`description` plus `when_to_use` is longer than 1536 characters.",
+      "fix": "Shorten the combined text to 1536 characters or fewer.",
+      "why": "Claude Code truncates the combined listing text, which can cut off trigger phrases."
+    },
+    {
+      "id": "L-DESC-04",
+      "severity": "major",
+      "category": "trigger",
+      "heuristic": false,
+      "platform": "any",
+      "stage": "lint",
+      "message": "The `name` or `description` contains XML tags.",
+      "fix": "Remove the XML or HTML tags from the name and description.",
+      "why": "Tags are not allowed in these fields and can interfere with prompt handling."
+    },
+    {
+      "id": "L-DESC-05",
+      "severity": "minor",
+      "category": "trigger",
+      "heuristic": true,
+      "platform": "any",
+      "stage": "lint",
+      "message": "The `description` uses first or second person (for example \"I can\", \"you can\", \"help me\").",
+      "fix": "Rewrite in the third person, for example \"Cleans CSV files\".",
+      "why": "Descriptions are injected into the system prompt; mixed point of view hurts discovery."
+    },
+    {
+      "id": "L-DESC-06",
+      "severity": "major",
+      "category": "trigger",
+      "heuristic": false,
+      "platform": "any",
+      "stage": "lint",
+      "message": "The `description` is shorter than 40 characters.",
+      "fix": "Expand it to say what the skill does and when to use it.",
+      "why": "Very short descriptions give the model too little to match against."
+    },
+    {
+      "id": "L-DESC-07",
+      "severity": "minor",
+      "category": "trigger",
+      "heuristic": true,
+      "platform": "any",
+      "stage": "lint",
+      "message": "The `description` has no \"when\" clause (use when, when the user, whenever, use this, use for).",
+      "fix": "Add a clause saying when the skill should be used.",
+      "why": "Trigger conditions in the description improve selection accuracy."
+    },
+    {
+      "id": "L-SIZE-01",
+      "severity": "major",
+      "category": "conciseness",
+      "heuristic": false,
+      "platform": "any",
+      "stage": "lint",
+      "message": "The SKILL.md body is over the line limit.",
+      "fix": "Move detail into referenced files and keep the body concise.",
+      "why": "Long bodies consume context every time the skill loads."
+    },
+    {
+      "id": "L-SIZE-02",
+      "severity": "minor",
+      "category": "conciseness",
+      "heuristic": false,
+      "platform": "any",
+      "stage": "lint",
+      "message": "The SKILL.md body is over the token estimate limit (characters divided by 4).",
+      "fix": "Trim the body or split it into referenced files.",
+      "why": "Large bodies consume context every time the skill loads."
+    },
+    {
+      "id": "L-REF-01",
+      "severity": "major",
+      "category": "conciseness",
+      "heuristic": false,
+      "platform": "any",
+      "stage": "lint",
+      "message": "A referenced file does not exist.",
+      "fix": "Create the file or remove the reference.",
+      "why": "Broken references leave the agent without the content it was told to read."
+    },
+    {
+      "id": "L-REF-02",
+      "severity": "major",
+      "category": "safety",
+      "heuristic": false,
+      "platform": "any",
+      "stage": "lint",
+      "message": "A reference resolves outside the reviewed root.",
+      "fix": "Keep referenced files inside the skill or repository.",
+      "why": "Reaching outside the root can expose unrelated files and is not portable."
+    },
+    {
+      "id": "L-REF-03",
+      "severity": "minor",
+      "category": "conciseness",
+      "heuristic": false,
+      "platform": "any",
+      "stage": "lint",
+      "message": "A file is reachable only through another referenced file (depth greater than 1).",
+      "fix": "Link the file directly from SKILL.md.",
+      "why": "Nested references are often read only partially."
+    },
+    {
+      "id": "L-REF-04",
+      "severity": "minor",
+      "category": "conciseness",
+      "heuristic": false,
+      "platform": "any",
+      "stage": "lint",
+      "message": "A referenced file is over the length limit and has no table of contents near the top.",
+      "fix": "Add a table of contents (a list of headings or links) within the first lines.",
+      "why": "A contents list lets the agent find the right section without reading the whole file."
+    },
+    {
+      "id": "L-PATH-01",
+      "severity": "minor",
+      "category": "scripts_tools",
+      "heuristic": false,
+      "platform": "any",
+      "stage": "lint",
+      "message": "The instructions use a Windows-style backslash path.",
+      "fix": "Use forward slashes in paths.",
+      "why": "Backslash paths fail on non-Windows systems."
+    },
+    {
+      "id": "L-TIME-01",
+      "severity": "minor",
+      "category": "clarity",
+      "heuristic": true,
+      "platform": "any",
+      "stage": "lint",
+      "message": "The text contains a date-dependent statement (\"as of <year>\", \"before/after <month> <year>\", or \"currently\" followed by a version).",
+      "fix": "Remove the dated statement or move it to a clearly marked legacy section.",
+      "why": "Time-sensitive statements go stale and mislead."
+    },
+    {
+      "id": "L-UNIQ-01",
+      "severity": "major",
+      "category": "trigger",
+      "heuristic": false,
+      "platform": "any",
+      "stage": "lint",
+      "message": "Another skill in this run has the same `name`.",
+      "fix": "Give each skill a unique name.",
+      "why": "Duplicate names make skills indistinguishable and one may shadow the other."
+    },
+    {
+      "id": "L-FILE-01",
+      "severity": "minor",
+      "category": "trigger",
+      "heuristic": false,
+      "platform": "any",
+      "stage": "lint",
+      "message": "The skill file is named `skill.md` rather than `SKILL.md`.",
+      "fix": "Rename the file to `SKILL.md`.",
+      "why": "The spec requires the exact name SKILL.md; some loaders on case-sensitive systems will not find it."
+    },
+    {
+      "id": "L-CC-01",
+      "severity": "major",
+      "category": "safety",
+      "heuristic": false,
+      "platform": "claude-code",
+      "stage": "lint",
+      "message": "`allowed-tools` grants unrestricted shell access (Bash, Bash(*) or Bash(* *)).",
+      "fix": "Restrict Bash to specific commands, for example `Bash(git:*)`.",
+      "why": "Unrestricted shell removes the permission prompt for any command."
+    },
+    {
+      "id": "L-CC-02",
+      "severity": "minor",
+      "category": "safety",
+      "heuristic": false,
+      "platform": "claude-code",
+      "stage": "score",
+      "message": "The skill can perform irreversible actions and does not set `disable-model-invocation`.",
+      "fix": "Add `disable-model-invocation: true` so the skill runs only when the user invokes it.",
+      "why": "Irreversible actions should not be triggered automatically by the model."
+    }
+  ]
+}
