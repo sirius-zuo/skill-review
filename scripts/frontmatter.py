@@ -14,9 +14,17 @@ _ESCAPES = {'"': '"', "\\": "\\", "n": "\n"}
 
 
 class _Err(Exception):
-    def __init__(self, reason):
+    def __init__(self, reason, located=False):
         Exception.__init__(self, reason)
         self.reason = reason
+        self.located = located  # True once reason carries its "line N: " prefix
+
+
+def _locate(e, lineno):
+    """Return e with exactly one 'line N:' prefix (never re-wraps a located error)."""
+    if e.located:
+        return e
+    return _Err("line %d: %s" % (lineno, e.reason), True)
 
 
 def _strip_comment(s):
@@ -122,7 +130,7 @@ def _collect_indented(lines, i):
     return j, lines[i:j]
 
 
-def _block_scalar(kind, chomp, block):
+def _block_scalar(kind, chomp, block, base):
     body = list(block)
     trailing = 0
     while body and not body[-1].strip():
@@ -132,6 +140,9 @@ def _block_scalar(kind, chomp, block):
     if first is None:
         return ""
     ind = _indent(first)
+    for k, ln in enumerate(body):
+        if ln.strip() and _indent(ln) < ind:
+            raise _Err("line %d: block scalar line is indented less than its first line" % (base + k), True)
     body = [ln[ind:] if ln.strip() else "" for ln in body]
     if kind == "|":
         text = "\n".join(body)
@@ -176,7 +187,7 @@ def _parse_block(lines, base):
             bm = _BLOCK_RE.match(rest)
             if bm:
                 j, block = _collect_indented(lines, i + 1)
-                meta[key] = _block_scalar(bm.group(1), bm.group(2), block)
+                meta[key] = _block_scalar(bm.group(1), bm.group(2), block, lineno + 1)
                 i = j
                 continue
             if not rest or rest.startswith("#"):
@@ -195,7 +206,7 @@ def _parse_block(lines, base):
             meta[key] = _parse_scalar(rest)
             i += 1
         except _Err as e:
-            raise _Err("line %d: %s" % (lineno, e.reason))
+            raise _locate(e, lineno)
     return meta
 
 
@@ -220,7 +231,7 @@ def _parse_map(block, base):
                 raise _Err("block scalars are not supported in nested maps")
             out[key] = _parse_scalar(rest)
         except _Err as e:
-            raise _Err("line %d: %s" % (lineno, e.reason))
+            raise _locate(e, lineno)
     return out
 
 

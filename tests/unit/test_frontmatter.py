@@ -34,10 +34,21 @@ class FrontmatterTests(unittest.TestCase):
     def test_extras(self):
         p = parse_skill_file("---\nempty:\nq: ''\nkeep: |+\n  a\n\n---\n")
         self.assertEqual(p.meta, {"empty": "", "q": "", "keep": "a\n\n"})
-        for bad in ("a: &x 1", "a: *x", "a:\n  b:\n    c: 1", "a:\n  - x", "- x", "a: 1\na: 2", 'a: "x'):
+        cases = [
+            ("a: &x 1", "line 2: anchors, aliases and tags are not supported"),
+            ("a: *x", "line 2: anchors, aliases and tags are not supported"),
+            ("a:\n  b:\n    c: 1", "line 3: multi-level nesting is not supported"),
+            ("a:\n  - x", "line 3: block lists are not supported"),
+            ("- x", "line 2: expected 'key: value'"),
+            ("a: 1\na: 2", "line 3: duplicate key 'a'"),
+            ('a: "x', "line 2: unterminated quoted string"),
+            ("d: >\n    a\n  b", "line 4: block scalar line is indented less than its first line"),
+            ("m:\n  a: 1\n  a: 2", "line 4: duplicate key 'a'"),
+        ]
+        for bad, msg in cases:
             p = parse_skill_file("---\n%s\n---\n" % bad)
             self.assertIsNone(p.meta, bad)
-            self.assertTrue(p.error.startswith("line "), bad)
+            self.assertEqual(p.error, msg, bad)
 
     def test_never_raises(self):
         for t in ("", "---", "---\n", "\x00\n---", None):
