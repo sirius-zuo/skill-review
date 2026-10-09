@@ -214,6 +214,11 @@
       "pattern_id": "SEC-SE-AWS",
       "path_glob": "tests/**",
       "reason": "Unit tests and fixtures contain intentional hostile samples."
+    },
+    {
+      "pattern_id": "SEC-HI-CONCEAL",
+      "path_glob": "tests/**",
+      "reason": "tests/calibration/mutations.json carries concealment text as the intended input of mutation MU-03; it is a calibration data file, not a skill."
     }
   ]
 }
