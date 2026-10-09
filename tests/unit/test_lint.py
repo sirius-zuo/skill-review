@@ -200,6 +200,12 @@ class LintRuleTests(unittest.TestCase):
             res = lint_skill(manifest, skill, root)
             self.assertEqual(res["meta"], {})
 
+    def test_cc01_independent_of_description(self):
+        for desc in ('""', None):
+            with self.subTest(desc=desc):
+                self.assertTrue(fires(one(skill_text(desc=desc, extra={"allowed-tools": "Bash"})),
+                                      "L-CC-01"))
+
     def test_cli_writes_valid_json(self):
         with tempdir() as base:
             root = os.path.join(base, "root")

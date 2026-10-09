@@ -156,6 +156,8 @@ def _frontmatter_rules(add, sf, meta, skill, real_root, th):
             add("L-NAME-05", sf, 1, name)
         if XML_TAG_RE.search(name):
             add("L-DESC-04", sf, 1, "in name")
+    if "allowed-tools" in meta and _bash_unrestricted(meta["allowed-tools"]):
+        add("L-CC-01", sf, 1)
     desc = _str(meta.get("description")).strip()
     if not desc:
         add("L-DESC-01", sf, 1)
@@ -173,8 +175,6 @@ def _frontmatter_rules(add, sf, meta, skill, real_root, th):
         add("L-DESC-06", sf, 1, "%d characters, minimum %d" % (len(desc), th["desc_min"]))
     if not WHEN_RE.search(desc):
         add("L-DESC-07", sf, 1)
-    if "allowed-tools" in meta and _bash_unrestricted(meta["allowed-tools"]):
-        add("L-CC-01", sf, 1)
 
 
 def _ref_line(from_text, kind, target):
