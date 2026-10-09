@@ -13,6 +13,7 @@
     "kit_dir": {"type": "string", "minLength": 1},
     "target": {"type": "string", "minLength": 1},
     "created": {"type": "string", "minLength": 1},
+    "nonce": {"type": "string", "minLength": 1},
     "self_dir": {"type": "string", "minLength": 1},
     "source": {
       "type": "object",
