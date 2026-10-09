@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "distractors": [
+    {
+      "name": "pdf-handler",
+      "description": "Read, merge, split, and extract text or tables from PDF files, or produce a new PDF from supplied content."
+    },
+    {
+      "name": "sheet-wrangler",
+      "description": "Open, clean, and transform spreadsheet and CSV data; add formulas, pivot summaries, and formatting to workbook files."
+    },
+    {
+      "name": "deck-builder",
+      "description": "Build slide decks and presentations from an outline, with layouts, speaker notes, and consistent styling."
+    },
+    {
+      "name": "commit-writer",
+      "description": "Write clear commit messages from a staged diff, following conventional commit style with a short subject and explanatory body."
+    },
+    {
+      "name": "code-reviewer",
+      "description": "Review a code change for defects, risky patterns, and maintainability problems, and report prioritized comments."
+    },
+    {
+      "name": "test-author",
+      "description": "Write unit and integration tests for existing functions, covering edge cases and failure paths."
+    },
+    {
+      "name": "sql-helper",
+      "description": "Compose, explain, and optimize SQL queries against a relational database schema."
+    },
+    {
+      "name": "web-researcher",
+      "description": "Search the web for a question, compare several sources, and summarize the findings with citations."
+    },
+    {
+      "name": "photo-editor",
+      "description": "Crop, resize, recolor, and retouch images, or remove backgrounds from pictures."
+    },
+    {
+      "name": "translator",
+      "description": "Translate text between languages while keeping tone, terminology, and formatting intact."
+    },
+    {
+      "name": "email-drafter",
+      "description": "Draft and polish emails and replies for a stated audience, tone, and purpose."
+    },
+    {
+      "name": "chart-maker",
+      "description": "Turn tabular data into charts and dashboards, choosing suitable chart types, scales, and colors."
+    },
+    {
+      "name": "doc-writer",
+      "description": "Write and restructure technical documentation, such as READMEs, guides, and API reference pages."
+    },
+    {
+      "name": "dependency-upgrader",
+      "description": "Upgrade project dependencies to newer versions, resolve breaking changes, and update lockfiles."
+    },
+    {
+      "name": "bug-hunter",
+      "description": "Diagnose a failing program by reproducing the problem, tracing the cause, and proposing a minimal fix."
+    }
+  ]
+}

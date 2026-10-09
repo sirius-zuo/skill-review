@@ -33,6 +33,11 @@ class SupportDocsTests(unittest.TestCase):
         self.assertIn("{{CANARY}}", _read("kit-templates", "kit-readme.md") + doc
                       + _read("kit-templates", "canary-env.txt"))
 
+    def test_routing_doc(self):
+        doc = _read("support", "routing.md")
+        for needle in ["none", "routing-<n>.json", "OK <path>", "untrusted", "nonce"]:
+            self.assertIn(needle, doc, needle)
+
 
 if __name__ == "__main__":
     unittest.main()

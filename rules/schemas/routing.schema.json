@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "skill-review routing choices",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "engine",
+    "call",
+    "choices"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "engine": {
+      "enum": [
+        "script",
+        "llm-fallback"
+      ]
+    },
+    "call": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "choices": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}
