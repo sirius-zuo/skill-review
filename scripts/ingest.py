@@ -14,7 +14,14 @@ GIT_TIMEOUT = 30
 
 
 def _is_num(x):
-    return isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x)
+    if isinstance(x, bool) or not isinstance(x, (int, float)):
+        return False
+    if isinstance(x, int) and abs(x) > 2 ** 53:
+        return False
+    try:
+        return math.isfinite(x)
+    except OverflowError:
+        return False
 
 
 def _mean(xs):
@@ -108,6 +115,9 @@ def _norm_plugin(data, source_file, res):
         agg = c.get("aggregates") if isinstance(c.get("aggregates"), dict) else {}
         if _is_num(agg.get("score")):
             scores.append(agg["score"])
+        elif agg.get("score") is not None:
+            res["valid"] = False
+            res["warnings"].append("non-numeric or oversized score")
         if _is_num(agg.get("delta")):
             deltas.append(agg["delta"])
         w = c["arms"].get("with") if isinstance(c.get("arms"), dict) else None
@@ -288,7 +298,7 @@ def build_ingest(manifest):
         if reason is None:
             try:
                 res = normalize(fmt, data, rel, kit_lookup)
-            except (KeyError, TypeError, AttributeError, ValueError):
+            except (KeyError, TypeError, AttributeError, ValueError, OverflowError):
                 reason = "malformed %s content" % fmt
         owner = _owner(manifest, rel)
         target = None

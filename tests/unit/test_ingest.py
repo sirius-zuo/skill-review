@@ -119,6 +119,24 @@ class IngestTests(unittest.TestCase):
             self.assertFalse(d["has_valid_result"])
             self.assertEqual(validate_against(read_json(os.path.join(work, "repo-ingest.json")), "ingest"), [])
 
+    def test_oversized_numbers_are_invalid_not_fatal(self):
+        pe = load("plugin-eval.json")
+        pe["cases"][0]["aggregates"]["score"] = 10 ** 400
+        bm = load("benchmark.json")
+        bm["run_summary"]["with_skill"]["pass_rate"]["mean"] = 10 ** 400
+        with tempdir() as root:
+            make_tree(root, {"s/SKILL.md": SK % "s", "s/plugin-eval.json": json.dumps(pe),
+                             "s/benchmark.json": json.dumps(bm),
+                             "s/kit-results.json": raw("kit-results.json")})
+            m = build_ingest(build_manifest(root))
+            d = list(m["skills"].values())[0]
+            bad = {i["source_file"]: i for i in d["invalid"]}
+            self.assertEqual(set(bad), {"s/plugin-eval.json", "s/benchmark.json"})
+            self.assertTrue(all(i["reason"] for i in bad.values()))
+            self.assertEqual([r["source_file"] for r in d["results"]], ["s/kit-results.json"])
+        r = normalize("claude-plugin-eval", pe, "x.json", no_kit)
+        self.assertFalse(r["valid"])
+
     def test_freshness_unknown_without_git_and_shallow(self):
         with tempdir() as root:
             make_tree(root, {"SKILL.md": SK % "s"})
