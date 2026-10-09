@@ -3,6 +3,7 @@
 Symlinks are never followed; nothing outside the root is read.
 """
 import os
+import stat
 
 from common import read_text, sanitize_name, scoring
 from frontmatter import parse_skill_file
@@ -52,17 +53,31 @@ def _walk(root):
 
 def _file_entry(root, rel, limits):
     full = os.path.join(root, rel.replace("/", os.sep))
-    st = os.lstat(full)
     entry = {"path": rel, "size": 0, "binary": False, "symlink": None,
              "hidden": any(p.startswith(".") for p in rel.split("/")),
              "bundled": False, "skip_reason": None}
-    if os.path.islink(full):
-        entry["symlink"] = os.readlink(full)
+    try:
+        st = os.lstat(full)
+    except OSError:
+        entry["skip_reason"] = "unreadable"
+        return entry
+    if stat.S_ISLNK(st.st_mode):
+        try:
+            entry["symlink"] = os.readlink(full)
+        except OSError:
+            entry["symlink"] = ""
         entry["skip_reason"] = "symlink"
         return entry
+    if not stat.S_ISREG(st.st_mode):
+        entry["skip_reason"] = "special"
+        return entry
     entry["size"] = st.st_size
-    with open(full, "rb") as f:
-        entry["binary"] = b"\x00" in f.read(limits["binary_sniff_bytes"])
+    try:
+        with open(full, "rb") as f:
+            entry["binary"] = b"\x00" in f.read(limits["binary_sniff_bytes"])
+    except OSError:
+        entry["skip_reason"] = "unreadable"
+        return entry
     if entry["binary"]:
         entry["skip_reason"] = "binary"
     elif st.st_size > limits["bundle_max_bytes"]:
@@ -123,6 +138,9 @@ def build_manifest(root, self_dir=None, source=None):
                 e = _file_entry(real_root, rel, limits)
             entries.append(e)
         by_dir[d]["files"] = entries
+        for e in entries:
+            if e["skip_reason"] == "unreadable":
+                warnings.append({"code": "UNREADABLE_FILE", "detail": e["path"]})
         if len(rels) > limits["max_files_per_skill"]:
             warnings.append({"code": "FILE_LIMIT", "detail": "%s: %d files, only the first %d are bundled"
                              % (d, len(rels), limits["max_files_per_skill"])})
@@ -136,6 +154,10 @@ def build_manifest(root, self_dir=None, source=None):
         if len(seen[sname]) > 1:
             warnings.append({"code": "NAME_CONFLICT",
                              "detail": "name '%s' used by: %s" % (sname, ", ".join(seen[sname]))})
+
+    for e in repo_files:
+        if e["skip_reason"] == "unreadable":
+            warnings.append({"code": "UNREADABLE_FILE", "detail": e["path"]})
 
     self_review = bool(self_dir) and real_root == os.path.realpath(self_dir)
     return {"schema_version": 1, "engine": "script", "root": real_root,

@@ -104,6 +104,32 @@ class DiscoverTests(unittest.TestCase):
             m = build_manifest(root)
             self.assertEqual(m["skills"][0]["skill_file"], "a/skill.md")
 
+    @unittest.skipUnless(hasattr(os, "mkfifo"), "no mkfifo")
+    def test_fifo_does_not_hang(self):
+        with tempdir() as root:
+            make_tree(root, {"a/SKILL.md": skill("a")})
+            os.mkfifo(os.path.join(root, "a", "pipe"))
+            m = build_manifest(root)
+            by = {f["path"]: f for f in m["skills"][0]["files"]}
+            self.assertEqual(by["a/pipe"]["skip_reason"], "special")
+            self.assertFalse(by["a/pipe"]["bundled"])
+            self.assertEqual(validate_against(m, "manifest"), [])
+
+    @unittest.skipIf(hasattr(os, "geteuid") and os.geteuid() == 0, "root reads anything")
+    def test_unreadable_file(self):
+        with tempdir() as root:
+            make_tree(root, {"a/SKILL.md": skill("a"), "a/secret.txt": "x"})
+            p = os.path.join(root, "a", "secret.txt")
+            os.chmod(p, 0)
+            try:
+                m = build_manifest(root)
+            finally:
+                os.chmod(p, 0o600)
+            by = {f["path"]: f for f in m["skills"][0]["files"]}
+            self.assertEqual(by["a/secret.txt"]["skip_reason"], "unreadable")
+            self.assertIn("UNREADABLE_FILE", [w["code"] for w in m["warnings"]])
+            self.assertEqual(validate_against(m, "manifest"), [])
+
     def test_repo_files(self):
         with tempdir() as root:
             make_tree(root, {"README.md": "r", "a/SKILL.md": skill("a")})
