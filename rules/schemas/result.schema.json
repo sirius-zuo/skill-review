@@ -1,0 +1,190 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "skill-review per-skill result",
+  "type": "object",
+  "required": ["schema_version", "engine", "skill", "key", "kind", "review_failed", "inventory",
+               "exposure", "categories", "quality_overall", "quality_band", "risk_tier",
+               "risk_rule", "risk_rationale", "evidence", "scan_hits", "lint_findings",
+               "undisclosed_capabilities", "recommendations", "judge_reliability",
+               "ignored_answers", "insufficient_evidence", "review_errors"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": 1},
+    "engine": {"enum": ["script", "llm-fallback"]},
+    "skill": {"type": "string", "minLength": 1},
+    "key": {"type": "string", "minLength": 1},
+    "kind": {"const": "skill"},
+    "review_failed": {"type": "boolean"},
+    "review_errors": {"type": "array", "items": {"type": "string"}},
+    "inventory": {
+      "type": "object",
+      "required": ["scripts", "shell", "network_read", "network_write", "file_write",
+                   "irreversible", "credentials", "invokes_agents", "ingests_untrusted",
+                   "multi_step", "fans_out", "composable_output", "long_running",
+                   "has_siblings", "large_body", "has_references"],
+      "additionalProperties": {"type": "boolean"}
+    },
+    "exposure": {"enum": ["E0", "E1", "E2", "E3"]},
+    "categories": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["score", "applicable", "blocker_capped", "gates"],
+        "additionalProperties": false,
+        "properties": {
+          "score": {"type": ["integer", "null"], "minimum": 0, "maximum": 10},
+          "applicable": {"type": "boolean"},
+          "blocker_capped": {"type": "boolean"},
+          "gates": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "required": ["kind", "answered_by", "answer", "evidence"],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {"enum": ["blocker", "critical", "quality"]},
+                "answered_by": {"enum": ["judge", "script"]},
+                "answer": {"enum": ["yes", "no", "insufficient_evidence"]},
+                "evidence": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["file", "line", "quote"],
+                    "additionalProperties": false,
+                    "properties": {
+                      "file": {"type": "string", "minLength": 1},
+                      "line": {"type": "integer", "minimum": 0},
+                      "quote": {"type": "string"}
+                    }
+                  }
+                },
+                "reason": {"type": "string"},
+                "fix": {"type": "string"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "quality_overall": {"type": ["number", "null"], "minimum": 0, "maximum": 10},
+    "quality_band": {"enum": ["strong", "adequate", "weak", null]},
+    "risk_tier": {"enum": ["critical", "high", "medium", "low", "unknown"]},
+    "risk_rule": {"type": ["string", "null"]},
+    "risk_rationale": {"type": "string", "minLength": 1},
+    "evidence": {
+      "type": "object",
+      "required": ["level", "results"],
+      "additionalProperties": false,
+      "properties": {
+        "level": {"enum": ["reported", "unverified"]},
+        "results": {"type": "array", "items": {"type": "object"}}
+      }
+    },
+    "scan_hits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["hit_id", "pattern_id", "family", "severity", "scope", "file", "line",
+                     "excerpt", "fix", "why", "triage", "live"],
+        "additionalProperties": false,
+        "properties": {
+          "hit_id": {"type": "string", "pattern": "^H[0-9]{3,}$"},
+          "pattern_id": {"type": "string"},
+          "family": {"type": "string"},
+          "severity": {"enum": ["critical", "major", "minor"]},
+          "scope": {"enum": ["skill", "repo"]},
+          "file": {"type": "string"},
+          "line": {"type": "integer", "minimum": 0},
+          "excerpt": {"type": "string"},
+          "fix": {"type": "string"},
+          "why": {"type": "string"},
+          "live": {"type": "boolean"},
+          "triage": {
+            "anyOf": [
+              {"type": "null"},
+              {
+                "type": "object",
+                "required": ["label", "reason_code", "reason"],
+                "additionalProperties": false,
+                "properties": {
+                  "label": {"enum": ["confirmed", "benign", "unclear"]},
+                  "reason_code": {"enum": ["not_executed", "purpose_consistent", null]},
+                  "reason": {"type": "string"}
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "lint_findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["rule_id", "severity", "category", "heuristic", "platform", "file",
+                     "line", "message", "fix", "why"],
+        "additionalProperties": false,
+        "properties": {
+          "rule_id": {"type": "string", "pattern": "^L-[A-Z]+-[0-9]{2}$"},
+          "severity": {"enum": ["blocker", "major", "minor"]},
+          "category": {"type": "string", "minLength": 1},
+          "heuristic": {"type": "boolean"},
+          "platform": {"enum": ["any", "claude-code"]},
+          "stage": {"enum": ["lint", "score"]},
+          "file": {"type": "string", "minLength": 1},
+          "line": {"type": "integer", "minimum": 1},
+          "message": {"type": "string", "minLength": 1},
+          "fix": {"type": "string"},
+          "why": {"type": "string"},
+          "dismissed": {
+            "type": "object",
+            "required": ["reason"],
+            "additionalProperties": false,
+            "properties": {"reason": {"type": "string", "minLength": 1}}
+          }
+        }
+      }
+    },
+    "undisclosed_capabilities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["capability", "claim", "evidence"],
+        "properties": {
+          "capability": {"type": "string", "minLength": 1},
+          "claim": {"type": "object"},
+          "evidence": {"type": "array", "minItems": 1, "items": {"type": "object"}}
+        }
+      }
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["priority_rank", "source", "id", "category", "text", "why", "evidence"],
+        "additionalProperties": false,
+        "properties": {
+          "priority_rank": {"type": "integer", "minimum": 1, "maximum": 6},
+          "source": {"enum": ["gate", "lint", "hit", "capability", "routing"]},
+          "id": {"type": "string", "minLength": 1},
+          "category": {"type": "string", "minLength": 1},
+          "text": {"type": "string", "minLength": 1},
+          "why": {"type": "string"},
+          "evidence": {"type": "array", "items": {"type": "object"}}
+        }
+      }
+    },
+    "judge_reliability": {
+      "type": "object",
+      "required": ["quote_failure_rate", "trial_agreement", "trials"],
+      "additionalProperties": false,
+      "properties": {
+        "quote_failure_rate": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "trial_agreement": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "trials": {"type": "integer", "minimum": 0}
+      }
+    },
+    "ignored_answers": {"type": "array", "items": {"type": "string"}},
+    "insufficient_evidence": {"type": "array", "items": {"type": "string"}}
+  }
+}
