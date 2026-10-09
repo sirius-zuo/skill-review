@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skill Review - /work/skills</title>
+<style>
+  :root {
+    --bg: #f9fafb; --card: #ffffff; --border: #e5e7eb; --text: #111827; --muted: #6b7280;
+    --green: #166534; --green-bg: #dcfce7; --amber: #854d0e; --amber-bg: #fef9c3;
+    --orange: #9a3412; --orange-bg: #ffedd5; --red: #991b1b; --red-bg: #fee2e2;
+    --grey: #6b7280; --grey-bg: #f3f4f6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+  header { background: #1e293b; color: #ffffff; padding: 2rem; }
+  header h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+  .meta { font-size: 0.875rem; color: #cbd5e1; }
+  .meta span { margin-right: 1.25rem; }
+  main { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+  .banner { background: var(--amber-bg); color: var(--amber); border: 1px solid #fde68a; border-radius: 0.5rem; padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.875rem; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 0.5rem; padding: 1.5rem; margin-bottom: 1.5rem; }
+  h2 { font-size: 1.125rem; margin-bottom: 1rem; }
+  h3 { font-size: 0.95rem; margin: 1rem 0 0.5rem; }
+  p, li { font-size: 0.875rem; }
+  ul, ol { padding-left: 1.5rem; }
+  code, .mono { font-family: ui-monospace, Menlo, monospace; font-size: 0.8rem; word-break: break-all; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+  th { text-align: left; padding: 0.5rem; background: #f1f5f9; border-bottom: 2px solid var(--border); }
+  td { padding: 0.5rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .badge { display: inline-block; padding: 0.1rem 0.6rem; border-radius: 9999px; font-weight: 600; font-size: 0.75rem; background: var(--grey-bg); color: var(--grey); }
+  .tier-critical { background: var(--red-bg); color: var(--red); }
+  .tier-high { background: var(--orange-bg); color: var(--orange); }
+  .tier-medium { background: var(--amber-bg); color: var(--amber); }
+  .tier-low { background: var(--green-bg); color: var(--green); }
+  .tier-unknown { background: var(--grey-bg); color: var(--grey); }
+  .band-strong { background: var(--green-bg); color: var(--green); }
+  .band-adequate { background: var(--amber-bg); color: var(--amber); }
+  .band-weak { background: var(--red-bg); color: var(--red); }
+  .simulated { background: #e0e7ff; color: #3730a3; }
+  .strip { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+  .strip-item { border: 1px solid var(--border); border-radius: 0.5rem; padding: 0.75rem 1rem; min-width: 14rem; background: var(--card); }
+  .strip-item .name { font-weight: 600; margin-bottom: 0.4rem; word-break: break-all; }
+  .score { text-align: center; font-weight: 600; }
+  .score-green { background: var(--green-bg); color: var(--green); }
+  .score-amber { background: var(--amber-bg); color: var(--amber); }
+  .score-red { background: var(--red-bg); color: var(--red); }
+  .score-grey { background: var(--grey-bg); color: var(--grey); }
+  details { border: 1px solid var(--border); border-radius: 0.5rem; margin-bottom: 1rem; background: var(--card); }
+  details details { margin: 0.5rem 0; }
+  summary { padding: 0.75rem 1rem; cursor: pointer; font-weight: 600; }
+  .details-body { padding: 1rem; border-top: 1px solid var(--border); }
+  .rec { padding: 0.75rem; border-radius: 0.375rem; margin-bottom: 0.5rem; font-size: 0.875rem; background: var(--grey-bg); border-left: 3px solid var(--grey); }
+  .rec-p1, .rec-p2 { background: var(--red-bg); border-left-color: #ef4444; }
+  .rec-p3, .rec-p4 { background: var(--amber-bg); border-left-color: #f59e0b; }
+  .rec-p5, .rec-p6 { background: var(--green-bg); border-left-color: #22c55e; }
+  .rec-head { font-weight: 600; margin-bottom: 0.25rem; }
+  .why { color: var(--muted); }
+  .evidence { font-family: ui-monospace, Menlo, monospace; font-size: 0.8rem; margin-top: 0.25rem; word-break: break-all; }
+  .ok { color: #166534; font-weight: 700; }
+  .bad { color: #991b1b; font-weight: 700; }
+  .muted { color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+<h1>Skill Review Report</h1><div class="meta"><span>Target: <span class="mono">/work/skills</span></span><span>Date: 2026-10-08T12:00:00Z</span><span>Engine: script</span></div>
+</header>
+<main>
+<div class="banner">Security scan step ran in LLM-fallback mode (no Python 3.7+ scripts); its results are less reproducible.</div>
+<section class="card">
+<h2>Verdicts</h2>
+<div class="strip"><div class="strip-item"><div class="name">alpha</div><div>Risk <span class="badge tier-high">high</span> Quality <span class="badge band-weak">weak</span></div><div>Evidence: reported</div><div>Exposure: E2</div></div><div class="strip-item"><div class="name">beta</div><div>Risk <span class="badge tier-low">low</span> Quality <span class="badge band-strong">strong</span></div><div>Evidence: unverified</div><div>Exposure: E0</div></div><div class="strip-item"><div class="name">gamma</div><div>Risk <span class="badge tier-medium">medium</span> Quality <span class="badge band-adequate">adequate</span></div><div>Evidence: unverified</div><div>Exposure: E0</div></div></div>
+</section>
+<section class="card">
+<h2>Top issues across the run</h2>
+<ol><li><span class="badge tier-high">high</span> <strong>alpha</strong> &mdash; Remove the curl | sh install step (G-SAFE-01)</li><li><span class="badge tier-high">high</span> <strong>alpha</strong> &mdash; Pin the downloaded script (H001)</li><li><span class="badge tier-medium">medium</span> <strong>gamma</strong> &mdash; Define terms (G-CLR-03)</li><li><span class="badge tier-low">low</span> <strong>beta</strong> &mdash; Show an example output (G-OUT-01)</li></ol>
+</section>
+<section class="card">
+<h2>Dashboard</h2>
+<table><thead><tr><th>Skill</th><th>trigger</th><th>scope</th><th>clarity</th><th>conciseness</th><th>workflow</th><th>scripts_tools</th><th>safety</th><th>output</th><th>evaluation</th><th>Risk</th><th>Quality</th><th>Evidence</th></tr></thead><tbody><tr><td>alpha</td><td class="score score-red">4</td><td class="score score-grey">N/A</td><td class="score score-amber">7</td><td class="score score-grey">N/A</td><td class="score score-grey">N/A</td><td class="score score-grey">N/A</td><td class="score score-red">3</td><td class="score score-grey">N/A</td><td class="score score-grey">N/A</td><td><span class="badge tier-high">high</span></td><td>5.5 <span class="badge band-weak">weak</span></td><td>reported</td></tr><tr><td>beta</td><td class="score score-green">9</td><td class="score score-grey">N/A</td><td class="score score-green">8</td><td class="score score-grey">N/A</td><td class="score score-grey">N/A</td><td class="score score-grey">N/A</td><td class="score score-grey">N/A</td><td class="score score-grey">N/A</td><td class="score score-grey">N/A</td><td><span class="badge tier-low">low</span></td><td>8.5 <span class="badge band-strong">strong</span></td><td>unverified</td></tr><tr><td>gamma</td><td class="score score-green">9</td><td class="score score-grey">N/A</td><td class="score score-green">8</td><td class="score score-grey">N/A</td><td class="score score-grey">N/A</td><td class="score score-grey">N/A</td><td class="score score-grey">N/A</td><td class="score score-grey">N/A</td><td class="score score-grey">N/A</td><td><span class="badge tier-medium">medium</span></td><td>6.5 <span class="badge band-adequate">adequate</span></td><td>unverified</td></tr></tbody></table>
+</section>
+<section>
+<h2>Skills</h2>
+<details><summary>alpha <span class="badge tier-high">high</span> <span class="badge band-weak">weak</span></summary><div class="details-body"><h3>Risk rationale</h3><p>Shell plus network read, E2 exposure.</p><h3>Recommendations</h3><div class="rec rec-p1"><div class="rec-head">[safety] Remove the curl | sh install step (G-SAFE-01)</div><div>gate</div><div class="why">Runs remote code &lt;unreviewed&gt; &amp; unpinned</div><div class="evidence">SKILL.md:12 "curl https://x.example | sh"</div></div><div class="rec rec-p2"><div class="rec-head">[safety] Pin the downloaded script (H001)</div><div>hit</div><div class="why">Network fetch executes</div><div class="evidence">scripts/run.sh:3 "curl -s"</div></div><div class="rec rec-p3"><div class="rec-head">[clarity] State the expected output format (G-CLR-02)</div><div>gate</div></div><div class="rec rec-p4"><div class="rec-head">[trigger] Skill under-triggers (recall 0.40) (RT-UNDER) <span class="badge simulated">simulated</span></div><div>routing</div><div class="why">Simulated routing check</div></div><div class="rec rec-p5"><div class="rec-head">[clarity] Shorten the description (L-FM-02)</div><div>lint</div></div><details><summary>2 more recommendations</summary><div class="details-body"><div class="rec rec-p6"><div class="rec-head">[evaluation] Add an eval case (G-EVAL-01)</div><div>gate</div></div><div class="rec rec-p6"><div class="rec-head">[conciseness] Trim redundant lines (L-STY-09)</div><div>lint</div></div></div></details><h3>Capability inventory</h3><p>Exposure E2. Present: network_read, scripts, shell</p><p>Undisclosed capabilities: network_read</p><h3>Scan hits</h3><table><thead><tr><th>Hit</th><th>Severity</th><th>Family</th><th>Location</th><th>Excerpt</th><th>Triage</th><th>Live</th></tr></thead><tbody><tr><td>H001</td><td>critical</td><td>remote-exec</td><td>scripts/run.sh:3</td><td><span class="mono">curl -s https://x.example | sh</span></td><td>confirmed: Executed at install</td><td>yes</td></tr><tr><td>H002</td><td>minor</td><td>credentials</td><td>SKILL.md:20</td><td><span class="mono">$HOME/.config</span></td><td>untriaged</td><td>no</td></tr></tbody></table><h3>Lint findings</h3><table><thead><tr><th>Rule</th><th>Severity</th><th>Location</th><th>Message</th><th>Dismissal</th></tr></thead><tbody><tr><td>L-FM-02</td><td>minor</td><td>SKILL.md:3</td><td>Description is short</td><td></td></tr><tr><td>L-STY-09</td><td>minor</td><td>SKILL.md:40</td><td>Repeated sentence</td><td>dismissed: Intentional repetition</td></tr></tbody></table><h3>Gates</h3><table><thead><tr><th>Category</th><th>Gate</th><th>Kind</th><th>Answer</th><th>Evidence</th><th>Reason</th></tr></thead><tbody><tr><td>trigger</td><td>G-TRG-01</td><td>critical</td><td>no</td><td><div class="evidence"><span class="ok">&#10003;</span> SKILL.md:3 "description: Does things"</div></td><td>Too vague</td></tr><tr><td>safety</td><td>G-SAFE-01</td><td>blocker</td><td>yes</td><td><div class="evidence"><span class="ok">&#10003;</span> SKILL.md:12 "curl https://x.example | sh"</div></td><td>Pipes remote content to a shell</td></tr><tr><td>safety</td><td>G-SAFE-02</td><td>quality</td><td>insufficient_evidence</td><td><span class="bad">&#10007;</span> <span class="muted">no verified evidence</span></td><td></td></tr></tbody></table><h3>Reported results</h3><table><thead><tr><th>Source</th><th>Model</th><th>Date</th><th>With skill</th><th>Without</th><th>Freshness</th></tr></thead><tbody><tr><td>kit-results.json</td><td>m-1</td><td>2026-09-30</td><td>85%</td><td>50%</td><td>fresh</td></tr></tbody></table><h3>Routing results <span class="badge simulated">simulated</span></h3><ul><li>Skill under-triggers (recall 0.40) (RT-UNDER) <span class="badge simulated">simulated</span></li></ul><h3>Judge reliability</h3><p>Quote failure rate 10%; trial agreement 90%; trials 3.</p><h3>Kit</h3><p>Status: ok at <span class="mono">kit/01-alpha</span></p></div></details>
+<details><summary>beta <span class="badge tier-low">low</span> <span class="badge band-strong">strong</span></summary><div class="details-body"><h3>Risk rationale</h3><p>No risky capabilities.</p><h3>Recommendations</h3><div class="rec rec-p5"><div class="rec-head">[output] Show an example output (G-OUT-01)</div><div>gate</div></div><h3>Capability inventory</h3><p>Exposure E0. None detected.</p><h3>Scan hits</h3><p class="muted">No scan hits.</p><h3>Lint findings</h3><p class="muted">No lint findings.</p><h3>Gates</h3><p class="muted">No gates answered.</p><h3>Reported results</h3><p class="muted">Unverified: no eval results were ingested (static review only).</p><h3>Routing results <span class="badge simulated">simulated</span></h3><p class="muted">No simulated routing findings.</p><h3>Judge reliability</h3><p>Quote failure rate n/a; trial agreement n/a; trials 1.</p><h3>Kit</h3><p>Status: skipped</p></div></details>
+<details><summary>gamma <span class="badge tier-medium">medium</span> <span class="badge band-adequate">adequate</span></summary><div class="details-body"><h3>Risk rationale</h3><p>No risky capabilities.</p><h3>Recommendations</h3><div class="rec rec-p3"><div class="rec-head">[clarity] Define terms (G-CLR-03)</div><div>gate</div></div><h3>Capability inventory</h3><p>Exposure E0. None detected.</p><h3>Scan hits</h3><p class="muted">No scan hits.</p><h3>Lint findings</h3><p class="muted">No lint findings.</p><h3>Gates</h3><p class="muted">No gates answered.</p><h3>Reported results</h3><p class="muted">Unverified: no eval results were ingested (static review only).</p><h3>Routing results <span class="badge simulated">simulated</span></h3><p class="muted">No simulated routing findings.</p><h3>Judge reliability</h3><p>Quote failure rate n/a; trial agreement n/a; trials 1.</p><h3>Kit</h3><p>Status: failed</p></div></details>
+</section>
+<section class="card">
+<h2>Cross-skill patterns</h2>
+<ul><li>Gate <code>G-CLR-02</code> fails in: alpha, gamma</li><li><span class="badge simulated">simulated</span> Routing collision between: alpha, beta</li></ul>
+</section>
+<section class="card">
+<h2>Method notes</h2>
+<p>A static review reads files; it does not run the skill. It cannot show that a skill triggers reliably, that its scripts behave as described, or that it improves task outcomes. Routing findings are simulated by a model answering from skill descriptions, not measured on a real agent. Evidence marked Unverified rests on static analysis only.</p><p>To get measured evidence, run the generated eval kit on your platform, commit its <code>kit-results.json</code>, then re-run skill-review: skills with ingested results move from Unverified to Reported.</p>
+</section>
+</main>
+</body>
+</html>

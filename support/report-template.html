@@ -2,135 +2,97 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Skill Review Report — {{skillset_name}}</title>
+<title>{{title}}</title>
 <style>
   :root {
-    --green: #22c55e; --amber: #f59e0b; --red: #ef4444;
-    --grey: #9ca3af; --bg: #f9fafb; --card: #ffffff;
-    --border: #e5e7eb; --text: #111827; --muted: #6b7280;
+    --bg: #f9fafb; --card: #ffffff; --border: #e5e7eb; --text: #111827; --muted: #6b7280;
+    --green: #166534; --green-bg: #dcfce7; --amber: #854d0e; --amber-bg: #fef9c3;
+    --orange: #9a3412; --orange-bg: #ffedd5; --red: #991b1b; --red-bg: #fee2e2;
+    --grey: #6b7280; --grey-bg: #f3f4f6;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
-  header { background: #1e293b; color: white; padding: 2rem; }
+  body { font-family: -apple-system, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+  header { background: #1e293b; color: #ffffff; padding: 2rem; }
   header h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
-  .meta { font-size: 0.875rem; color: #94a3b8; }
-  .risk-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-weight: 600; font-size: 0.875rem; }
-  .risk-low { background: var(--green); color: white; }
-  .risk-medium { background: var(--amber); color: white; }
-  .risk-high { background: #f97316; color: white; }
-  .risk-critical { background: var(--red); color: white; }
+  .meta { font-size: 0.875rem; color: #cbd5e1; }
+  .meta span { margin-right: 1.25rem; }
   main { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+  .banner { background: var(--amber-bg); color: var(--amber); border: 1px solid #fde68a; border-radius: 0.5rem; padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.875rem; }
   .card { background: var(--card); border: 1px solid var(--border); border-radius: 0.5rem; padding: 1.5rem; margin-bottom: 1.5rem; }
   h2 { font-size: 1.125rem; margin-bottom: 1rem; }
-  h3 { font-size: 1rem; margin-bottom: 0.75rem; }
+  h3 { font-size: 0.95rem; margin: 1rem 0 0.5rem; }
+  p, li { font-size: 0.875rem; }
+  ul, ol { padding-left: 1.5rem; }
+  code, .mono { font-family: ui-monospace, Menlo, monospace; font-size: 0.8rem; word-break: break-all; }
   table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
   th { text-align: left; padding: 0.5rem; background: #f1f5f9; border-bottom: 2px solid var(--border); }
-  td { padding: 0.5rem; border-bottom: 1px solid var(--border); }
-  .score-cell { text-align: center; font-weight: 600; border-radius: 0.25rem; }
-  .score-green { background: #dcfce7; color: #166534; }
-  .score-amber { background: #fef9c3; color: #854d0e; }
-  .score-red { background: #fee2e2; color: #991b1b; }
-  .score-grey { background: #f3f4f6; color: var(--grey); }
-  details { border: 1px solid var(--border); border-radius: 0.5rem; margin-bottom: 1rem; }
-  summary { padding: 1rem; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 0.75rem; }
-  summary:hover { background: #f8fafc; }
+  td { padding: 0.5rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .badge { display: inline-block; padding: 0.1rem 0.6rem; border-radius: 9999px; font-weight: 600; font-size: 0.75rem; background: var(--grey-bg); color: var(--grey); }
+  .tier-critical { background: var(--red-bg); color: var(--red); }
+  .tier-high { background: var(--orange-bg); color: var(--orange); }
+  .tier-medium { background: var(--amber-bg); color: var(--amber); }
+  .tier-low { background: var(--green-bg); color: var(--green); }
+  .tier-unknown { background: var(--grey-bg); color: var(--grey); }
+  .band-strong { background: var(--green-bg); color: var(--green); }
+  .band-adequate { background: var(--amber-bg); color: var(--amber); }
+  .band-weak { background: var(--red-bg); color: var(--red); }
+  .simulated { background: #e0e7ff; color: #3730a3; }
+  .strip { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+  .strip-item { border: 1px solid var(--border); border-radius: 0.5rem; padding: 0.75rem 1rem; min-width: 14rem; background: var(--card); }
+  .strip-item .name { font-weight: 600; margin-bottom: 0.4rem; word-break: break-all; }
+  .score { text-align: center; font-weight: 600; }
+  .score-green { background: var(--green-bg); color: var(--green); }
+  .score-amber { background: var(--amber-bg); color: var(--amber); }
+  .score-red { background: var(--red-bg); color: var(--red); }
+  .score-grey { background: var(--grey-bg); color: var(--grey); }
+  details { border: 1px solid var(--border); border-radius: 0.5rem; margin-bottom: 1rem; background: var(--card); }
+  details details { margin: 0.5rem 0; }
+  summary { padding: 0.75rem 1rem; cursor: pointer; font-weight: 600; }
   .details-body { padding: 1rem; border-top: 1px solid var(--border); }
-  .rec { padding: 0.75rem; border-radius: 0.375rem; margin-bottom: 0.5rem; font-size: 0.875rem; }
-  .rec-critical { background: #fee2e2; border-left: 3px solid var(--red); }
-  .rec-important { background: #fef9c3; border-left: 3px solid var(--amber); }
-  .rec-suggested { background: #dcfce7; border-left: 3px solid var(--green); }
-  .rec-label { font-weight: 600; margin-bottom: 0.25rem; }
-  .gate-table td:first-child { width: 6rem; font-size: 0.75rem; font-family: monospace; }
-  .gate-yes { color: var(--green); font-weight: 700; }
-  .gate-no { color: var(--red); font-weight: 700; }
-  .score-summary { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
-  .score-item { text-align: center; }
-  .score-item .value { font-size: 2rem; font-weight: 700; }
-  .score-item .label { font-size: 0.75rem; color: var(--muted); }
-  .pattern-list { list-style: none; }
-  .pattern-list li { padding: 0.5rem 0; border-bottom: 1px solid var(--border); font-size: 0.875rem; }
-  .pattern-list li:last-child { border-bottom: none; }
+  .rec { padding: 0.75rem; border-radius: 0.375rem; margin-bottom: 0.5rem; font-size: 0.875rem; background: var(--grey-bg); border-left: 3px solid var(--grey); }
+  .rec-p1, .rec-p2 { background: var(--red-bg); border-left-color: #ef4444; }
+  .rec-p3, .rec-p4 { background: var(--amber-bg); border-left-color: #f59e0b; }
+  .rec-p5, .rec-p6 { background: var(--green-bg); border-left-color: #22c55e; }
+  .rec-head { font-weight: 600; margin-bottom: 0.25rem; }
+  .why { color: var(--muted); }
+  .evidence { font-family: ui-monospace, Menlo, monospace; font-size: 0.8rem; margin-top: 0.25rem; word-break: break-all; }
+  .ok { color: #166534; font-weight: 700; }
+  .bad { color: #991b1b; font-weight: 700; }
+  .muted { color: var(--muted); }
 </style>
 </head>
 <body>
-
 <header>
-  <h1>Skill Review Report — {{skillset_name}}</h1>
-  <div class="meta">
-    Reviewed: {{review_date}} &nbsp;|&nbsp;
-    Skills reviewed: {{skill_count}} &nbsp;|&nbsp;
-    Overall risk: <span class="risk-badge risk-{{overall_risk_class}}">{{overall_risk_level}}</span>
-  </div>
+{{header}}
 </header>
-
 <main>
-
-  <!-- SECTION: Dashboard -->
-  <div class="card">
-    <h2>Dashboard</h2>
-    <div class="score-summary">
-      <div class="score-item">
-        <div class="value">{{overall_score}}</div>
-        <div class="label">Avg Score</div>
-      </div>
-      <div class="score-item">
-        <div class="value">{{critical_rec_count}}</div>
-        <div class="label">Critical Issues</div>
-      </div>
-      <div class="score-item">
-        <div class="value">{{important_rec_count}}</div>
-        <div class="label">Important Issues</div>
-      </div>
-    </div>
-    <table>
-      <thead>
-        <tr>
-          <th>Skill</th>
-          <th>Risk</th>
-          <th>Score</th>
-          <th>Scope</th>
-          <th>Trigger</th>
-          <th>Prompt</th>
-          <th>Logic</th>
-          <th>Tools</th>
-          <th>Compose</th>
-          <th>Context</th>
-          <th>Tests</th>
-          <th>Reliability</th>
-          <th>Safety</th>
-          <th>Output</th>
-          <th>Perf</th>
-          <th>Autonomy</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{dashboard_rows}}
-      </tbody>
-    </table>
-  </div>
-
-  <!-- SECTION: Per-Skill Details -->
-  <div class="card">
-    <h2>Per-Skill Review</h2>
-    {{skill_sections}}
-  </div>
-
-  <!-- SECTION: Rollup Summary -->
-  <div class="card">
-    <h2>Rollup Summary</h2>
-    <h3>Cross-Skill Patterns</h3>
-    <ul class="pattern-list">
-      {{cross_skill_patterns}}
-    </ul>
-    <h3 style="margin-top:1rem">Critical Recommendations (All Skills)</h3>
-    {{all_critical_recs}}
-    <h3 style="margin-top:1rem">Important Recommendations (All Skills)</h3>
-    {{all_important_recs}}
-    <h3 style="margin-top:1rem">Overall Risk Rationale</h3>
-    <p style="font-size:0.875rem">{{overall_risk_rationale}}</p>
-  </div>
-
+{{banners}}
+<section class="card">
+<h2>Verdicts</h2>
+{{verdict_strip}}
+</section>
+<section class="card">
+<h2>Top issues across the run</h2>
+{{top_issues}}
+</section>
+<section class="card">
+<h2>Dashboard</h2>
+{{dashboard}}
+</section>
+<section>
+<h2>Skills</h2>
+{{skill_sections}}
+</section>
+<section class="card">
+<h2>Cross-skill patterns</h2>
+{{patterns}}
+</section>
+<section class="card">
+<h2>Method notes</h2>
+{{method_notes}}
+</section>
 </main>
 </body>
 </html>

