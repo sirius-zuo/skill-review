@@ -8,6 +8,12 @@
   "banners": [
     "scan"
   ],
+  "routing": {
+    "status": "ran",
+    "reason": null,
+    "calls_valid": 3,
+    "calls_expected": 3
+  },
   "skills": [
     {
       "schema_version": 1,

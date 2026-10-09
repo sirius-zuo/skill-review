@@ -79,6 +79,29 @@ class RenderTests(unittest.TestCase):
         self.assertIn("simulated", out)
         self.assertIn("Routing results", out)
 
+    def test_routing_status_note(self):
+        for status, reason in (("skipped", "--no-routing was given"),
+                               ("partial", "only 2 of 3 routing calls returned valid answers")):
+            r = load_fixture()
+            r["routing"] = {"status": status, "reason": reason + " <b>",
+                            "calls_valid": 2 if status == "partial" else 0, "calls_expected": 3}
+            out = render_report(r, template())
+            self.assertIn("Routing check %s: %s &lt;b&gt; (%d of 3 calls valid)."
+                          % (status, reason, r["routing"]["calls_valid"]), out)
+            self.assertNotIn(reason + " <b>", out)
+        r = load_fixture()
+        r["routing"]["status"] = "skipped"
+        r["routing"]["reason"] = "single mode"
+        for s in r["skills"]:
+            s["recommendations"] = [x for x in s["recommendations"] if x.get("source") != "routing"]
+        out = render_report(r, template())
+        self.assertNotIn("No simulated routing findings.", out)
+        self.assertIn("Routing check skipped: single mode", out)
+
+    def test_routing_status_ran_no_note(self):
+        out = render_report(load_fixture(), template())
+        self.assertNotIn("Routing check ran", out)
+
     def test_gate_evidence_marks(self):
         out = render_report(load_fixture(), template())
         self.assertIn("&#10003;", out)

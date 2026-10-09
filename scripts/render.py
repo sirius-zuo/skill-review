@@ -263,10 +263,15 @@ def _skill_section(r, s):
     # routing
     routing_recs = [x for x in recs if x.get("source") == "routing"]
     parts.append("<h3>Routing results %s</h3>" % _simulated())
+    rstat = r.get("routing") or {}
+    if rstat.get("status") not in (None, "ran"):
+        parts.append('<p class="muted">Routing check %s: %s (%s of %s calls valid).</p>' % (
+            esc(rstat.get("status")), esc(rstat.get("reason") or "no reason recorded"),
+            esc(rstat.get("calls_valid")), esc(rstat.get("calls_expected"))))
     if routing_recs:
         parts.append("<ul>%s</ul>" % "".join("<li>%s (%s) %s</li>" % (
             esc(x["text"]), esc(x["id"]), _simulated()) for x in routing_recs))
-    else:
+    elif rstat.get("status") != "skipped":
         parts.append('<p class="muted">No simulated routing findings.</p>')
     # judge reliability
     jr = s.get("judge_reliability") or {}

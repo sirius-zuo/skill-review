@@ -87,6 +87,22 @@ class SkillMdTests(unittest.TestCase):
                        "--summary", "llm-fallback"]:
             self.assertIn(needle, body, needle)
 
+    def test_mark_failed_uses_fixed_tokens(self):
+        body = self.parsed.body
+        used = re.findall(r"--mark-failed[ =](\S+)", body)
+        self.assertTrue(used)
+        allowed = {"judge_error", "judgment_invalid", "review_failed"}
+        for tok in used:
+            self.assertIn(tok.strip("`'\""), allowed, tok)
+        self.assertNotIn("<one-line reason>", body)
+
+    def test_routing_status_relied_on(self):
+        body = self.parsed.body
+        self.assertIn('"path"', body)
+        self.assertNotIn("delivery message", body)
+        for needle in ("`ran`", "`partial`", "`skipped`"):
+            self.assertIn(needle, body)
+
     def test_error_table_covers_spec(self):
         body = self.parsed.body
         for needle in ["git is required to review a GitHub URL; clone it yourself and pass "

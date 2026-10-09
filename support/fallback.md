@@ -70,7 +70,7 @@ In fallback mode you compose shell commands yourself (for `git clone`, `mkdir`, 
 1. Scan every file of the skill (bundled or not, within the scan limit) and every repo-level file. Never scan binaries or follow symlinks.
 2. For each pattern, honour `file_globs`, `executable_only` and `non_executable_only` (a file is executable by extension or shebang), `ignore_case` and `multiline`. Match the `regex` exactly as written; do not loosen or tighten it.
 3. Each match is a hit `{hit_id, pattern_id, family, severity, file, line, excerpt}`. Number hits `H` plus a zero-padded counter in file order, then line order. Excerpts are cut to `limits.excerpt_max_chars`, with control and invisible characters written as `\uXXXX` escapes, and secrets redacted to their first four characters followed by `***`.
-4. Each symlink whose target resolves outside the root is a hit with pattern id `SEC-SYMLINK-ESCAPE` (family and severity as listed in `rules/security-patterns.json`, or as the schema requires). Never read the target.
+4. Each symlink whose target resolves outside the root is a hit with pattern id `SEC-SYMLINK-ESCAPE`, family `credential-access`, severity `critical`. This hit is not in `rules/security-patterns.json`; scan.py generates it from the manifest's symlink records. Never read the target.
 5. **Inventory.** For each flag in `rules/capabilities.json`, start from its `default`; apply each rule whose `where` (`skill_md`, `executable` or `any`) matches the file and whose `regex` matches, setting the rule's `value`; a hit in any listed `families` sets the flag to `true`. `true` beats `suspected`, which beats the default. Set `has_siblings`, `large_body` and `has_references` from the manifest and the `lint` section of `rules/scoring.json`. Record the evidence (rule id, file, line) for each flag.
 
 ## ingest.py
@@ -127,8 +127,8 @@ In fallback mode you compose shell commands yourself (for `git clone`, `mkdir`, 
 
 **Reads:** every `W/<key>/result.json`, `kit-status.json`, `W/routing-map.json` and valid `routing-<n>.json`, `W/repo-ingest.json`, `W/run.json`, and `rules/scoring.json` (`routing` and `report` sections). **Writes:** `R/results.json`, matching `rules/schemas/results.schema.json`, with `"engine": "llm-fallback"`.
 
-1. Run metadata: target, date, engine, self-review, arguments, and `banners`: the step name (as the results schema lists them) for every input file whose `engine` is `llm-fallback`, plus `bundle` if bundling ran through the fallback, plus `assemble`.
-2. Routing (reviewed skills only): majority choice per prompt across valid calls; per skill `recall`, `false_trigger_rate` and `confusions`; findings per the thresholds in the `routing` section, labeled simulated. They never change a score, tier or evidence level.
+1. Run metadata: target, date, engine, self-review, arguments, `routing` (see step 2), and `banners`: the step name (as the results schema lists them) for every input file whose `engine` is `llm-fallback`, plus `bundle` if bundling ran through the fallback, plus `assemble`.
+2. Routing (reviewed skills only): majority choice per prompt across valid calls; per skill `recall`, `false_trigger_rate` and `confusions`; findings per the thresholds in the `routing` section, labeled simulated. They never change a score, tier or evidence level. Record `routing` as `{status, reason, calls_valid, calls_expected}` (calls expected = `orchestration.routing_calls`): `ran` when every expected call is valid, `partial` when some are, `skipped` when none are, with the reason (`--no-routing`, single mode, `--no-kit`, or no valid answers).
 3. Rollup: worst risk tier, mean quality, band counts, Reported/Unverified counts. Cross-skill patterns: the same gate failing in two or more skills, and routing collisions. Top issues: at most `report.top_issues_run`, ordered by risk tier, then recommendation rank.
 
 ## render.py
@@ -136,7 +136,7 @@ In fallback mode you compose shell commands yourself (for `git clone`, `mkdir`, 
 **Reads:** `R/results.json` (schema `rules/schemas/results.schema.json`), `support/report-template.html`, and `rules/scoring.json` (`report`). **Writes:** `R/report.html`; with `--summary`, the terminal summary.
 
 1. Fill the template's placeholders in the report order of the template. Escape every value from `results.json` as HTML (`&`, `<`, `>`, `"`, `'`). Paths are text, never links. Keep the Content-Security-Policy meta tag. Add no script elements; collapsible parts use `<details>`.
-2. Add a banner stating the report was rendered by the `llm-fallback` engine, alongside the banners already in `results.json`.
+2. When `routing.status` is not `ran`, each skill's routing section states the status, the escaped reason and the valid/expected call counts. Add a banner stating the report was rendered by the `llm-fallback` engine, alongside the banners already in `results.json`.
 3. **Summary** (`--summary`): print, filling every `<…>` from `results.json`'s `rollup` and the first three `top_issues`; append ` · <k> Unknown` to the risk line when any tier is `unknown`, and write `none` as the worst skill when there is none:
 
 ```

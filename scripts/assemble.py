@@ -137,12 +137,36 @@ def _routing_calls(work_dir):
             nums.append(int(m.group(1)))
     pmap = _opt(os.path.join(work_dir, "routing-map.json"))
     if pmap is None:
-        return [], None
+        return [], None, len(nums)
     calls = []
     for n in sorted(nums):
         if not routing.check(work_dir, n):
             calls.append(read_json(os.path.join(work_dir, "routing-%d.json" % n))["choices"])
-    return calls, pmap["prompts"]
+    return calls, pmap["prompts"], len(nums)
+
+
+def routing_status(args, n_valid, n_files, expected):
+    """Spec 12: say whether the simulated routing check ran, ran partly, or was skipped."""
+    if n_valid >= expected:
+        return {"status": "ran", "reason": None, "calls_valid": n_valid,
+                "calls_expected": expected}
+    if n_valid > 0:
+        reason = "only %d of %d routing calls returned valid answers" % (n_valid, expected)
+        return {"status": "partial", "reason": reason, "calls_valid": n_valid,
+                "calls_expected": expected}
+    args = args or {}
+    if args.get("no_routing"):
+        reason = "--no-routing was given"
+    elif args.get("mode") == "single":
+        reason = "single mode (the routing check needs a fresh sub-agent)"
+    elif args.get("no_kit"):
+        reason = "--no-kit was given (routing uses the kits' trigger prompts)"
+    elif n_files:
+        reason = "no routing call returned valid answers"
+    else:
+        reason = "no routing answers were produced"
+    return {"status": "skipped", "reason": reason, "calls_valid": 0,
+            "calls_expected": expected}
 
 
 def _routing_rec(f):
@@ -183,7 +207,9 @@ def assemble(work_dir):
         raise ValidationFailed(errors)
 
     metrics_ = {}
-    calls, pmap = _routing_calls(work_dir)
+    calls, pmap, n_files = _routing_calls(work_dir)
+    routing_info = routing_status(run.get("args"), len(calls), n_files,
+                                  scoring()["orchestration"]["routing_calls"])
     if calls:
         names = sorted(set(s["skill"] for s in skills))  # reviewed skills only
         metrics_ = routing.metrics(names, calls, pmap)
@@ -209,7 +235,7 @@ def assemble(work_dir):
         "schema_version": 1, "engine": "script", "target": run["target"],
         "date": run["created"], "arguments": run["args"],
         "self_review": bool(manifest.get("self_review")),
-        "banners": _banners(work_dir, run, manifest, keys),
+        "banners": _banners(work_dir, run, manifest, keys), "routing": routing_info,
         "skills": skills, "kits": kits, "repo_results": repo.get("results") or [],
         "rollup": rollup(skills), "patterns": patterns(skills, metrics_),
         "top_issues": top_issues(skills, scoring()["report"]["top_issues_run"]),

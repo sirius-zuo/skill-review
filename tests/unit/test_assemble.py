@@ -145,6 +145,67 @@ class AssembleTests(unittest.TestCase):
             self.assertIn("RT-UNDER", ids)
             self.assertEqual([p for p in out["patterns"] if p["kind"] == "routing"], [])
 
+    def _set_args(self, work, **kw):
+        run = read_json(os.path.join(work, "run.json"))
+        run["args"].update(kw)
+        write_json(os.path.join(work, "run.json"), run)
+
+    def _routing_calls(self, work, n_valid, n_invalid=0):
+        self._routing(work, "a")
+        for n in range(2, n_valid + 1):
+            write_json(os.path.join(work, "routing-%d.json" % n),
+                       {"schema_version": 1, "engine": "script", "call": n,
+                        "choices": {"P1": "a", "P2": "a"}})
+        for n in range(n_valid + 1, n_valid + 1 + n_invalid):
+            write_json(os.path.join(work, "routing-%d.json" % n), {"bad": True})
+
+    def test_routing_status_ran(self):
+        with _helpers.tempdir() as tmp:
+            work = make_run(tmp, [skill("a")])
+            self._set_args(work, mode="parallel")
+            self._routing_calls(work, 3)
+            out = assemble.assemble(work)
+            self.assertEqual(out["routing"], {"status": "ran", "reason": None,
+                                              "calls_valid": 3, "calls_expected": 3})
+            self.assertEqual(validate_against(out, "results"), [])
+
+    def test_routing_status_partial(self):
+        with _helpers.tempdir() as tmp:
+            work = make_run(tmp, [skill("a")])
+            self._set_args(work, mode="parallel")
+            self._routing_calls(work, 2, n_invalid=1)
+            out = assemble.assemble(work)
+            self.assertEqual(out["routing"]["status"], "partial")
+            self.assertEqual((out["routing"]["calls_valid"], out["routing"]["calls_expected"]),
+                             (2, 3))
+            self.assertIn("2 of 3", out["routing"]["reason"])
+            self.assertEqual(validate_against(out, "results"), [])
+
+    def test_routing_status_skipped(self):
+        cases = [({"mode": "parallel", "no_routing": True}, "--no-routing"),
+                 ({"mode": "single"}, "single mode"),
+                 ({"mode": "parallel", "no_kit": True}, "--no-kit"),
+                 ({"mode": "parallel"}, "no routing answers were produced")]
+        for args, needle in cases:
+            with _helpers.tempdir() as tmp:
+                work = make_run(tmp, [skill("a")])
+                self._set_args(work, **args)
+                out = assemble.assemble(work)
+                self.assertEqual(out["routing"]["status"], "skipped", args)
+                self.assertIn(needle, out["routing"]["reason"], args)
+                self.assertEqual(out["routing"]["calls_valid"], 0)
+                self.assertEqual(validate_against(out, "results"), [])
+
+    def test_routing_status_skipped_all_invalid(self):
+        with _helpers.tempdir() as tmp:
+            work = make_run(tmp, [skill("a")])
+            self._set_args(work, mode="parallel")
+            self._routing(work, "a")
+            write_json(os.path.join(work, "routing-1.json"), {"bad": True})
+            out = assemble.assemble(work)
+            self.assertEqual(out["routing"]["status"], "skipped")
+            self.assertIn("valid", out["routing"]["reason"])
+
     def test_kits_and_schema(self):
         with _helpers.tempdir() as tmp:
             work = make_run(tmp, [skill("a", recs=[rec(1, "A1")])])
