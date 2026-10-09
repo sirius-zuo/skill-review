@@ -236,7 +236,7 @@ def _parse_map(block, base):
 
 
 def _parse(text):
-    if text.startswith("﻿"):
+    if text.startswith("\ufeff"):
         text = text[1:]
     raw = text.split("\n")
     if raw[0].rstrip() != "---":

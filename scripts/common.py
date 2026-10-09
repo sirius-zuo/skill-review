@@ -80,7 +80,7 @@ def read_text(path, limit_bytes=None):
     with open(path, "rb") as f:
         raw = f.read() if limit_bytes is None else f.read(limit_bytes)
     text = raw.decode("utf-8", errors="replace")
-    if text.startswith("﻿"):
+    if text.startswith("\ufeff"):
         text = text[1:]
     return text
 
