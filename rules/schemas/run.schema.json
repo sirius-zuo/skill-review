@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "skill-review run metadata",
+  "type": "object",
+  "required": ["schema_version", "engine", "run_dir", "work_dir", "kit_dir", "target",
+               "created", "self_dir", "source", "args", "estimate"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": 1},
+    "engine": {"const": "script"},
+    "run_dir": {"type": "string", "minLength": 1},
+    "work_dir": {"type": "string", "minLength": 1},
+    "kit_dir": {"type": "string", "minLength": 1},
+    "target": {"type": "string", "minLength": 1},
+    "created": {"type": "string", "minLength": 1},
+    "self_dir": {"type": "string", "minLength": 1},
+    "source": {
+      "type": "object",
+      "required": ["type", "url", "clone_dir"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {"enum": ["local", "github"]},
+        "url": {"type": ["string", "null"]},
+        "clone_dir": {"type": ["string", "null"]}
+      }
+    },
+    "args": {
+      "type": "object",
+      "required": ["mode", "trials", "no_kit", "no_routing", "kit_format", "keep_work"],
+      "additionalProperties": false,
+      "properties": {
+        "mode": {"enum": ["parallel", "single"]},
+        "trials": {"type": "integer", "minimum": 1},
+        "no_kit": {"type": "boolean"},
+        "no_routing": {"type": "boolean"},
+        "kit_format": {"type": ["string", "null"]},
+        "keep_work": {"type": "boolean"}
+      }
+    },
+    "estimate": {
+      "type": "object",
+      "required": ["passes", "ask"],
+      "additionalProperties": false,
+      "properties": {
+        "passes": {"type": "integer", "minimum": 0},
+        "ask": {"type": "boolean"}
+      }
+    }
+  }
+}
