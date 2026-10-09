@@ -1,0 +1,127 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "skill-review run results",
+  "type": "object",
+  "required": ["schema_version", "engine", "target", "date", "arguments", "self_review",
+               "banners", "skills", "kits", "repo_results", "rollup", "patterns",
+               "top_issues"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": 1},
+    "engine": {"const": "script"},
+    "target": {"type": "string", "minLength": 1},
+    "date": {"type": "string", "minLength": 1},
+    "arguments": {"type": "object"},
+    "self_review": {"type": "boolean"},
+    "banners": {
+      "type": "array",
+      "items": {"enum": ["discover", "bundle", "lint", "scan", "ingest", "score", "build_kit",
+                         "assemble"]}
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["skill", "key", "risk_tier", "quality_overall", "quality_band", "evidence",
+                     "categories", "recommendations"],
+        "properties": {
+          "skill": {"type": "string", "minLength": 1},
+          "key": {"type": "string", "minLength": 1},
+          "risk_tier": {"enum": ["critical", "high", "medium", "low", "unknown"]},
+          "quality_overall": {"type": ["number", "null"]},
+          "quality_band": {"enum": ["strong", "adequate", "weak", null]},
+          "evidence": {"type": "object"},
+          "categories": {"type": "object"},
+          "recommendations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["priority_rank", "source", "id", "category", "text", "why",
+                           "evidence"],
+              "additionalProperties": false,
+              "properties": {
+                "priority_rank": {"type": "integer", "minimum": 1, "maximum": 6},
+                "source": {"enum": ["gate", "lint", "hit", "capability", "routing"]},
+                "id": {"type": "string", "minLength": 1},
+                "category": {"type": "string", "minLength": 1},
+                "text": {"type": "string", "minLength": 1},
+                "why": {"type": "string"},
+                "evidence": {"type": "array", "items": {"type": "object"}}
+              }
+            }
+          }
+        }
+      }
+    },
+    "kits": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["status", "path"],
+        "additionalProperties": false,
+        "properties": {
+          "status": {"enum": ["ok", "failed", "skipped"]},
+          "path": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "repo_results": {"type": "array", "items": {"type": "object"}},
+    "rollup": {
+      "type": "object",
+      "required": ["worst_tier", "tier_counts", "quality_mean", "band_counts",
+                   "evidence_counts"],
+      "additionalProperties": false,
+      "properties": {
+        "worst_tier": {"enum": ["critical", "high", "medium", "low", "unknown", null]},
+        "tier_counts": {
+          "type": "object",
+          "required": ["critical", "high", "medium", "low", "unknown"],
+          "additionalProperties": {"type": "integer", "minimum": 0}
+        },
+        "quality_mean": {"type": ["number", "null"]},
+        "band_counts": {
+          "type": "object",
+          "required": ["strong", "adequate", "weak"],
+          "additionalProperties": {"type": "integer", "minimum": 0}
+        },
+        "evidence_counts": {
+          "type": "object",
+          "required": ["reported", "unverified"],
+          "additionalProperties": {"type": "integer", "minimum": 0}
+        }
+      }
+    },
+    "patterns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "skills"],
+        "properties": {
+          "kind": {"enum": ["gate", "routing"]},
+          "id": {"type": "string", "minLength": 1},
+          "skills": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "top_issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["skill", "tier", "priority_rank", "source", "id", "category", "text",
+                     "why", "evidence"],
+        "additionalProperties": false,
+        "properties": {
+          "skill": {"type": "string", "minLength": 1},
+          "tier": {"enum": ["critical", "high", "medium", "low", "unknown"]},
+          "priority_rank": {"type": "integer", "minimum": 1, "maximum": 6},
+          "source": {"enum": ["gate", "lint", "hit", "capability", "routing"]},
+          "id": {"type": "string", "minLength": 1},
+          "category": {"type": "string", "minLength": 1},
+          "text": {"type": "string", "minLength": 1},
+          "why": {"type": "string"},
+          "evidence": {"type": "array", "items": {"type": "object"}}
+        }
+      }
+    }
+  }
+}
