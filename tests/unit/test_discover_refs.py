@@ -7,7 +7,9 @@ from datetime import datetime
 
 import _helpers
 from _helpers import make_tree, tempdir
-from common import UsageError, validate_against
+from unittest import mock
+
+from common import UsageError, scoring, validate_against
 from discover import (CloneError, build_manifest, cleanup_stale_clones, clone_repo,
                       default_run_dir, estimate_passes, extract_references, validate_target)
 
@@ -85,6 +87,28 @@ class ReferenceTests(unittest.TestCase):
             self.assertIn(".mcp.json", [f["path"] for f in m["repo_files"]])
             self.assertEqual(sorted(m["skills"][0]["eval_result_files"]),
                              ["s/evals/kit-results.json", "s/r.json"])
+            self.assertEqual(validate_against(m, "manifest"), [])
+
+    def test_deeply_nested_json_is_not_an_eval_result(self):
+        with tempdir() as root:
+            make_tree(root, {"s/SKILL.md": skill("s"), "s/deep.json": "[" * 200000,
+                             "s/r.json": '{"cases":[{"arms":{}}]}'})
+            m = build_manifest(root)
+            self.assertEqual(m["skills"][0]["eval_result_files"], ["s/r.json"])
+
+    def test_reference_added_files_respect_file_limit(self):
+        with tempdir() as root:
+            links = " ".join("[x](../shared/%d.txt)" % i for i in range(10))
+            spec = {"s/SKILL.md": skill("s", links)}
+            for i in range(10):
+                spec["shared/%d.txt" % i] = "x"
+            make_tree(root, spec)
+            with mock.patch.dict(scoring()["limits"], {"max_files_per_skill": 4}):
+                m = build_manifest(root)
+            self.assertEqual(len(m["skills"][0]["files"]), 4)
+            warn = [w for w in m["warnings"] if w["code"] == "FILE_LIMIT"]
+            self.assertEqual(len(warn), 1)
+            self.assertIn("7 referenced files", warn[0]["detail"])
             self.assertEqual(validate_against(m, "manifest"), [])
 
 

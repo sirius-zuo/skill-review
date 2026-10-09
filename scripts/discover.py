@@ -162,8 +162,9 @@ def _read_regular(real_root, rel, limit):
         return None
 
 
-def _collect_references(real_root, skill, text, limits):
+def _collect_references(real_root, skill, text, limits, warnings):
     refs = []
+    dropped = []
     depth1 = set()
     present = {e["path"] for e in skill["files"]}
 
@@ -188,7 +189,10 @@ def _collect_references(real_root, skill, text, limits):
                 continue
             if resolved not in present:
                 present.add(resolved)
-                skill["files"].append(_file_entry(real_root, resolved, limits))
+                if len(skill["files"]) >= limits["max_files_per_skill"]:
+                    dropped.append(resolved)
+                else:
+                    skill["files"].append(_file_entry(real_root, resolved, limits))
             if depth == 1 and resolved.endswith(".md"):
                 descend.append(resolved)
         for rel in descend:
@@ -198,6 +202,11 @@ def _collect_references(real_root, skill, text, limits):
 
     visit(skill["skill_file"], text, 1)
     skill["references"] = refs
+    if dropped:
+        warnings.append({"code": "FILE_LIMIT",
+                         "detail": "%s: %d referenced files not added (limit %d): %s"
+                         % (skill["dir"], len(dropped), limits["max_files_per_skill"],
+                            ", ".join(dropped[:5]))})
 
 
 def _is_eval_result(real_root, entry, limits):
@@ -213,7 +222,7 @@ def _is_eval_result(real_root, entry, limits):
         return False
     try:
         data = json.loads(body)
-    except ValueError:
+    except (ValueError, RecursionError):  # hostile or deeply nested JSON is simply not a result
         return False
     cases = data.get("cases") if isinstance(data, dict) else None
     return isinstance(cases, list) and any(isinstance(c, dict) and "arms" in c for c in cases)
@@ -280,7 +289,7 @@ def build_manifest(root, self_dir=None, source=None):
                              % (d, len(rels), limits["max_files_per_skill"])})
 
     for d in owner_dirs:
-        _collect_references(real_root, by_dir[d], texts[d], limits)
+        _collect_references(real_root, by_dir[d], texts[d], limits, warnings)
         by_dir[d]["eval_result_files"] = [e["path"] for e in by_dir[d]["files"]
                                           if _is_eval_result(real_root, e, limits)]
 
