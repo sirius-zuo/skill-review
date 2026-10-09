@@ -18,7 +18,7 @@ import re
 import sys
 
 from common import (CATEGORY_ORDER, EXIT_OK, UsageError, ValidationFailed, load_manifest,
-                    load_run, read_json, reviewable_skills, round_half_up, run_main, scoring,
+                    load_run, read_json, reviewable_skills, run_main, scoring,
                     validate_against, write_json)
 import routing
 
@@ -66,8 +66,13 @@ def rollup(skills):
         if tier_counts[t]:
             worst = t
             break
-    # tenths, rounded half up like every other score (round() is half-even on exact ties)
-    mean = round_half_up(sum(scores) / float(len(scores)) * 10) / 10.0 if scores else None
+    # Exact half-up in integer tenths: a float sum turns exact ties into x.4999... and
+    # rounds them down (e.g. 1.2 and 1.9 must give 1.6).
+    mean = None
+    if scores:
+        t = sum(int(round(s * 10)) for s in scores)
+        n = len(scores)
+        mean = ((2 * t + n) // (2 * n)) / 10.0
     return {"worst_tier": worst, "tier_counts": tier_counts, "quality_mean": mean,
             "band_counts": band_counts, "evidence_counts": evidence}
 

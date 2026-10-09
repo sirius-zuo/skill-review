@@ -213,6 +213,35 @@ class GitSymlinkTests(unittest.TestCase):
             self.assertEqual([h["file"] for h in esc], ["s/leak"])
 
     @unittest.skipUnless(shutil.which("git"), "git required for the mode 120000 check")
+    def test_tracked_skill_md_symlink_warns(self):
+        with tempdir() as base, tempdir() as tmp:
+            repo = os.path.join(base, "r")
+            os.makedirs(repo)
+            make_tree(repo, {"a/SKILL.md": skill("a"), "b/real.md": skill("b")})
+            os.symlink("real.md", os.path.join(repo, "b", "SKILL.md"))
+            for cmd in (["init", "-q"], ["add", "."], ["commit", "-q", "-m", "x"]):
+                subprocess.run(["git", "-C", repo] + cmd, env=GIT_ENV, check=True,
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            _, root = clone_repo("file://" + repo, tmp)
+            m = build_manifest(root)
+            self.assertEqual([s["dir"] for s in m["skills"]], ["a"])
+            w = [x for x in m["warnings"] if x["code"] == "SKILL_MD_SYMLINK"]
+            self.assertEqual(len(w), 1)
+            self.assertIn("b/SKILL.md", w[0]["detail"])
+
+    @unittest.skipUnless(shutil.which("git"), "git required for the mode 120000 check")
+    def test_unreadable_target_gets_placeholder(self):
+        with tempdir() as base, tempdir() as tmp:
+            repo = _git_repo_with_symlink(base)
+            _, root = clone_repo("file://" + repo, tmp)
+            with mock.patch("discover._read_regular", return_value=None):
+                m = build_manifest(root)
+            leak = [f for f in m["skills"][0]["files"] if f["path"] == "s/leak"][0]
+            self.assertEqual(leak["symlink"], "<unreadable target>")
+            self.assertEqual(leak["skip_reason"], "symlink")
+            self.assertFalse(leak["bundled"])
+
+    @unittest.skipUnless(shutil.which("git"), "git required for the mode 120000 check")
     def test_git_unavailable_skips_with_warning(self):
         with tempdir() as base, tempdir() as tmp:
             repo = _git_repo_with_symlink(base)

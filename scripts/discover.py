@@ -32,6 +32,7 @@ CODE_PATH_RE = re.compile(r"^[A-Za-z0-9_./-]+\.[A-Za-z0-9]{1,5}$")
 SCHEME_RE = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*://")
 GITHUB_RE = re.compile(r"^https://github\.com/[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9._-]+?(\.git)?/?$")
 KIT_RESULT_NAMES = ("kit-results.json", "benchmark.json")
+UNREADABLE_TARGET = "<unreadable target>"  # non-empty, so scan still sees a symlink
 
 
 def _rel(path, root):
@@ -210,7 +211,7 @@ def _mark_git_symlinks(real_root, entries, links, limits):
         if e["skip_reason"] in ("unreadable", "special", "file_limit"):
             continue
         target = _read_regular(real_root, e["path"], limits["binary_sniff_bytes"])
-        e.update({"symlink": target if target is not None else "", "size": 0,
+        e.update({"symlink": target if target is not None else UNREADABLE_TARGET, "size": 0,
                   "binary": False, "bundled": False, "skip_reason": "symlink"})
 
 
@@ -295,6 +296,10 @@ def build_manifest(root, self_dir=None, source=None):
     for d in sorted(skill_dirs):
         skill_file = (d + "/" if d != "." else "") + skill_dirs[d]
         if skill_file in links:  # a tracked symlink, never a skill file (as with real links)
+            warnings.append({"code": "SKILL_MD_SYMLINK",
+                             "detail": "%s is a tracked symlink (git mode 120000); it was not "
+                                       "read and its folder is not reviewed as a skill"
+                             % skill_file})
             continue
         sf_path = os.path.join(real_root, skill_file.replace("/", os.sep))
         try:

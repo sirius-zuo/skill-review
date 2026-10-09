@@ -234,6 +234,14 @@ class AssembleTests(unittest.TestCase):
         r = assemble.rollup([skill("a", quality=6.0), skill("b", quality=6.5)])
         self.assertEqual(r["quality_mean"], 6.3)
 
+    def test_quality_mean_exact_half_up_regressions(self):
+        # float sums turn exact ties into x.4999...; the mean is computed in integer tenths
+        # (3.3, 3.3, 3.4) has mean 3.333..., not a tie, so exact half-up gives 3.3.
+        for qs, want in (((1.2, 1.9), 1.6), ((1.1, 8.2), 4.7), ((3.3, 3.4), 3.4),
+                         ((3.3, 3.3, 3.4), 3.3)):
+            r = assemble.rollup([skill("s%d" % i, quality=q) for i, q in enumerate(qs)])
+            self.assertEqual(r["quality_mean"], want, qs)
+
     def test_malformed_result_is_an_error_not_a_crash(self):
         with _helpers.tempdir() as tmp:
             work = make_run(tmp, [skill("a"), skill("b")])
