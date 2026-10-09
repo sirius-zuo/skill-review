@@ -8,7 +8,7 @@ from _helpers import make_tree, run_script, tempdir
 
 from common import scoring, validate_against, write_json
 from discover import build_manifest
-from scan import (is_executable, load_patterns, make_excerpt, scan_skill,
+from scan import (FLAGS, is_executable, load_patterns, make_excerpt, scan_skill,
                   scan_text, symlink_hits)
 
 SKILL = "---\nname: demo\ndescription: Does demo things. Use when the user asks for a demo.\n---\nBody.\n"
@@ -176,7 +176,7 @@ class ScanTests(unittest.TestCase):
             with open(os.path.join(work, manifest["skills"][0]["key"], "scan.json")) as f:
                 data = json.load(f)
             self.assertEqual(validate_against(data, "scan"), [])
-            self.assertEqual(data["inventory"], {})
+            self.assertEqual(set(data["inventory"]), set(FLAGS))
             self.assertEqual(data["hits"][0]["pattern_id"], "SEC-RC-PIPE-SH")
 
 

@@ -42,7 +42,21 @@
       }
     },
     "inventory": {
-      "type": "object"
+      "type": "object",
+      "required": [
+        "scripts", "shell", "network_read", "network_write", "file_write", "irreversible",
+        "credentials", "invokes_agents", "ingests_untrusted", "multi_step", "fans_out",
+        "composable_output", "long_running", "has_siblings", "large_body", "has_references"
+      ],
+      "additionalProperties": {
+        "type": "object",
+        "required": ["value", "sources"],
+        "additionalProperties": false,
+        "properties": {
+          "value": {"enum": ["true", "false", "suspected", "unknown"]},
+          "sources": {"type": "array", "items": {"type": "string", "minLength": 1}}
+        }
+      }
     },
     "hits": {
       "type": "array",

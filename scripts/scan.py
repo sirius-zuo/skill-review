@@ -14,6 +14,14 @@ import unicodedata
 from common import (EXIT_OK, load_manifest, load_rules, reviewable_skills,
                     run_main, scoring, skill_work_dir, write_json)
 from discover import _read_regular
+from frontmatter import parse_skill_file
+from lint import _split_lines
+
+FLAGS = ("scripts", "shell", "network_read", "network_write", "file_write", "irreversible",
+         "credentials", "invokes_agents", "ingests_untrusted", "multi_step", "fans_out",
+         "composable_output", "long_running", "has_siblings", "large_body", "has_references")
+NUMBERED_RE = re.compile(r"^[ \t]{0,3}\d{1,9}[.)][ \t]+\S", re.M)
+MIN_NUMBERED = 3
 
 EXEC_EXTS = frozenset((".sh", ".bash", ".zsh", ".py", ".js", ".mjs", ".cjs", ".ts",
                        ".rb", ".ps1", ".pl"))
@@ -26,6 +34,7 @@ SYMLINK_WHY = ("A symlink that resolves outside the skill lets the skill expose 
                "read files such as keys and credentials that were never part of it.")
 
 _PATTERNS = None
+_CAPS = None
 
 
 def load_patterns():
@@ -39,6 +48,18 @@ def load_patterns():
             loaded.append(p)
         _PATTERNS = loaded
     return _PATTERNS
+
+
+def load_capabilities():
+    global _CAPS
+    if _CAPS is None:
+        caps = {}
+        for flag, spec in load_rules("capabilities").items():
+            spec = dict(spec)
+            spec["rules"] = [dict(r, _re=re.compile(r["regex"], re.M | re.I)) for r in spec["rules"]]
+            caps[flag] = spec
+        _CAPS = caps
+    return _CAPS
 
 
 def is_executable(path, head):
@@ -188,6 +209,63 @@ def scan_skill(manifest, skill, root):
     return {"hits": [{k: h[k] for k in order} for h in hits]}
 
 
+def _tools_mention_bash(value):
+    items = value if isinstance(value, list) else [value]
+    return any(isinstance(i, str) and "Bash" in i for i in items)
+
+
+def inventory(manifest, skill, root, hits):
+    """Map each flag to {"value", "sources"}; true beats suspected beats the default."""
+    limit = scoring()["limits"]["scan_max_bytes"]
+    real_root = os.path.realpath(root)
+    skill_text = _read_regular(real_root, skill["skill_file"], limit)
+    parsed = parse_skill_file(skill_text) if skill_text is not None else None
+    body = parsed.body if parsed else ""
+    meta = parsed.meta if parsed and isinstance(parsed.meta, dict) else {}
+    exec_files = []
+    for e in skill["files"]:
+        if e.get("symlink"):
+            continue
+        text = skill_text if e["path"] == skill["skill_file"] else _read_regular(
+            real_root, e["path"], limit)
+        if text is not None and is_executable(e["path"], text[:2]):
+            exec_files.append(text)
+    texts = {"executable": exec_files, "skill_md": [body], "any": exec_files + [body]}
+    skill_hits = [h for h in hits if h.get("scope", "skill") == "skill"]
+    found = {}  # flag -> {value: [sources]}
+
+    def add(flag, value, source):
+        found.setdefault(flag, {}).setdefault(value, []).append(source)
+
+    for flag, spec in load_capabilities().items():
+        for r in spec["rules"]:
+            if any(r["_re"].search(t) for t in texts[r["where"]]):
+                add(flag, r["value"], r["id"])
+        for h in skill_hits:
+            if h["family"] in spec["families"]:
+                add(flag, "true", h["hit_id"])
+    if exec_files:
+        add("scripts", "true", "CAP-SCRIPTS-1")
+    if _tools_mention_bash(meta.get("allowed-tools")):
+        add("shell", "true", "CAP-SHELL-4")
+    if len(NUMBERED_RE.findall(body)) >= MIN_NUMBERED:
+        add("multi_step", "suspected", "CAP-MULTI_STEP-2")
+    if len(reviewable_skills(manifest)) > 1:
+        add("has_siblings", "true", "CAP-HAS_SIBLINGS-1")
+    if len(_split_lines(body)) > scoring()["lint"]["large_body_lines"]:
+        add("large_body", "true", "CAP-LARGE_BODY-1")
+    if any(r.get("exists") for r in skill.get("references", [])):
+        add("has_references", "true", "CAP-HAS_REFERENCES-1")
+
+    out = {}
+    for flag in FLAGS:
+        got = found.get(flag, {})
+        value = next((v for v in ("true", "suspected") if v in got),
+                     load_capabilities()[flag]["default"])
+        out[flag] = {"value": value, "sources": got.get(value, [])}
+    return out
+
+
 def main(argv):
     ap = argparse.ArgumentParser(prog="scan.py")
     ap.add_argument("--work-dir", required=True)
@@ -197,7 +275,8 @@ def main(argv):
         res = scan_skill(manifest, skill, manifest["root"])
         out = {"schema_version": 1, "engine": "script",
                "skill": {k: skill[k] for k in ("key", "name", "dir", "skill_file")},
-               "hits": res["hits"], "inventory": {}}
+               "hits": res["hits"],
+               "inventory": inventory(manifest, skill, manifest["root"], res["hits"])}
         write_json(os.path.join(skill_work_dir(args.work_dir, skill["key"]), "scan.json"),
                    out, "scan")
     return EXIT_OK
