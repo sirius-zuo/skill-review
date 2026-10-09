@@ -57,10 +57,79 @@ class InventoryTests(unittest.TestCase):
                    md("Body\n", "allowed-tools: Read\n"))
 
     def test_network_read(self):
-        self.check("network_read", md("See https://example.com/docs\n"),
+        self.check("network_read", md("```bash\nls https://example.com/docs\n```\n"),
                    md("Use http://localhost:3000 and http://127.0.0.1/x\n"))
         self.check("network_read", dict(md("B\n"), **{"a.py": "requests.get(u)\n"}),
                    dict(md("B\n"), **{"a.py": "print(1)\n"}))
+
+    def test_network_read_prose_url_is_suspected(self):
+        r = inv(md("Background reading: https://example.com/docs\n"))
+        self.assertEqual(r["network_read"]["value"], "suspected")
+        self.assertEqual(r["network_read"]["sources"], ["CAP-NETWORK_READ-4"])
+        r = inv(md("Example:\n```python\nurl = 'https://example.com/x'\n```\n"))
+        self.assertEqual(r["network_read"]["value"], "suspected")
+
+    def test_network_read_shell_fenced_url_is_true(self):
+        for body in ("```bash\nhttp https://api.example.com/v1\n```\n",
+                     "~~~sh\n  get https://api.example.com/v1\n~~~\n",
+                     "```!\nfoo https://api.example.com/v1\n```\n",
+                     "Context: !`foo https://api.example.com/v1`\n"):
+            r = inv(md(body))
+            self.assertEqual(r["network_read"]["value"], "true", body)
+            self.assertIn("CAP-NETWORK_READ-3", r["network_read"]["sources"], body)
+        # A URL after the shell fence has closed is prose again.
+        r = inv(md("```bash\nls\n```\nSee https://example.com/docs\n"))
+        self.assertEqual(r["network_read"]["value"], "suspected")
+
+    def test_network_read_executable_url_is_true(self):
+        r = inv(dict(md("B\n"), **{"a.py": "URL = 'https://api.example.com/v1'\n"}))
+        self.assertEqual(r["network_read"]["value"], "true")
+        self.assertIn("CAP-NETWORK_READ-1", r["network_read"]["sources"])
+
+    def test_knowledge_skill_with_reading_link_stays_low(self):
+        import risk
+        from common import load_rules
+        from score import confirm_inventory, exposure_level
+        r = inv(md("Explain the Roman aqueducts. Background reading: "
+                   "https://en.wikipedia.org/wiki/Roman_aqueduct\n"))
+        self.assertNotEqual(r["network_read"]["value"], "true")
+        # The judge resolves the suspected flag: a reading link is not a network action.
+        judgment = {"inventory": {"network_read": {"value": False, "evidence": []}}}
+        confirmed = confirm_inventory(r, judgment, {})
+        self.assertFalse(confirmed["network_read"])
+        exposure = exposure_level(confirmed)
+        self.assertEqual(exposure, "E0")
+        ctx = {"exposure": exposure, "live_hits": [], "safety_cg_failed": ["SAF-CG1"],
+               "scores": {"trigger": 9.0, "safety": 9.0, "scripts_tools": None}}
+        rule = risk.evaluate(risk.compute_facts(ctx, scoring()["risk_thresholds"]),
+                             load_rules("risk-table")["rules"])
+        self.assertEqual(rule["id"], "L1")
+        self.assertEqual(rule["tier"], "low")
+
+    def test_file_write_redirect_only_true_in_shell(self):
+        # Comparisons and arrows in non-shell code are not file writes.
+        for code in ("if len(rows) > 0:\n    pass\n", "f = lambda x: x >= 1\n",
+                     "x = a >> 2\n"):
+            r = inv(dict(md("B\n"), **{"a.py": code}))
+            self.assertNotEqual(r["file_write"]["value"], "true", code)
+        for code in ("const f = (x) => x;\n", "if (a > b) { y(); }\n"):
+            r = inv(dict(md("B\n"), **{"a.js": code}))
+            self.assertNotEqual(r["file_write"]["value"], "true", code)
+        # In shell files, fd duplication and arrows are not file writes either.
+        for code in ("ls 2>&1\n", "echo x >&2\n", "[ \"$a\" -> b ]\n"):
+            r = inv(dict(md("B\n"), **{"a.sh": code}))
+            self.assertEqual(r["file_write"]["value"], "false", code)
+        for spec in ({"a.sh": "echo x > out.txt\n"}, {"a.bash": "echo x >> log.txt\n"},
+                     {"a.zsh": "print x >out.txt\n"}, {"run": "#!/bin/bash\necho x > o\n"}):
+            r = inv(dict(md("B\n"), **spec))
+            self.assertEqual(r["file_write"]["value"], "true", spec)
+            self.assertIn("CAP-FILE_WRITE-3", r["file_write"]["sources"], spec)
+        r = inv(md("```bash\necho x > out.txt\n```\n"))
+        self.assertEqual(r["file_write"]["value"], "true")
+        # A redirect-shaped token in a non-shell executable is only suspected.
+        r = inv(dict(md("B\n"), **{"a.py": "print('x > out.txt')\n"}))
+        self.assertEqual(r["file_write"]["value"], "suspected")
+        self.assertEqual(r["file_write"]["sources"], ["CAP-FILE_WRITE-4"])
 
     def test_network_write(self):
         self.check("network_write", dict(md("B\n"), **{"a.py": "requests.post(u, data=d)\n"}),

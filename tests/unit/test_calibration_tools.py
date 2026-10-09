@@ -17,7 +17,8 @@ if CAL_DIR not in sys.path:
     sys.path.insert(0, CAL_DIR)
 
 from mutate import apply_mutation  # noqa: E402
-from score_calibration import cohen_kappa, percent_agreement  # noqa: E402
+from score_calibration import (cohen_kappa, corpus_matches, mutation_detection,  # noqa: E402
+                               percent_agreement)
 import fetch_corpus  # noqa: E402
 
 GOOD = os.path.join(FIXTURES_DIR, "good-skill")
@@ -62,6 +63,87 @@ def results(skill_dir):
             with open(os.path.join(dirpath, fn), "rb") as f:
                 text += f.read().decode("utf-8", "replace")
     return lint_ids, hits, text
+
+
+REF = ("brand-guidelines", "internal-comms", "pdf")
+
+
+def _corpus():
+    with open(os.path.join(ROOT_DIR, "tests", "calibration", "corpus.json")) as f:
+        return json.load(f)
+
+
+def _mutations():
+    with open(os.path.join(ROOT_DIR, "tests", "calibration", "mutations.json")) as f:
+        return json.load(f)["mutations"]
+
+
+def _as_expected(m):
+    """A skill result that meets every expectation of mutation m."""
+    exp = m["expect"]
+    gates = {gid: {"answer": ans} for gid, ans in exp["gates"].items()}
+    return {"risk_tier": exp["tier"] or "Low", "quality_band": None,
+            "lint_findings": [{"rule_id": r} for r in exp["lint"]],
+            "scan_hits": [{"pattern_id": p} for p in exp["hits"]],
+            "categories": {"c": {"gates": gates}}}
+
+
+class GatingTests(unittest.TestCase):
+    def test_s1_needs_all_three_reference_skills(self):
+        corpus = _corpus()
+        full = {n: [{"risk_tier": "Low"}] for n in REF}
+        self.assertIs(corpus_matches(corpus, full)[1], True)
+        for missing in REF:
+            runs = dict((n, v) for n, v in full.items() if n != missing)
+            self.assertIsNone(corpus_matches(corpus, runs)[1], missing)
+        # A missing reference skill is NO DATA even when another one mismatched.
+        runs = {"brand-guidelines": [{"risk_tier": "Critical"}], "pdf": [{"risk_tier": "Low"}]}
+        self.assertIsNone(corpus_matches(corpus, runs)[1])
+        self.assertIsNone(corpus_matches(corpus, {})[1])
+
+    def test_s2_counts_missing_mutation_runs(self):
+        corpus, muts = _corpus(), _mutations()
+        base = {e["name"]: [{"risk_tier": e["expected_tiers"][0]}] for e in corpus["skills"]}
+        runs = dict(base)
+        for m in muts:
+            runs[m["id"]] = [_as_expected(m)]
+        det, jud, _ = mutation_detection(muts, runs, corpus)
+        self.assertEqual(det, 1.0)
+        self.assertEqual(jud, 1.0)
+        for m in muts:
+            partial = dict((k, v) for k, v in runs.items() if k != m["id"])
+            det, jud, detail = mutation_detection(muts, partial, corpus)
+            self.assertFalse(det == 1.0 and jud == 1.0, m["id"])
+            self.assertIn((m["id"], "no run"), detail)
+            if m["expect"]["lint"] or m["expect"]["hits"]:
+                self.assertLess(det, 1.0, m["id"])
+
+    def test_s2_no_runs_is_no_data(self):
+        det, jud, _ = mutation_detection(_mutations(), {}, _corpus())
+        self.assertIsNone(det)
+        self.assertIsNone(jud)
+
+    def test_cli_partial_data_never_passes(self):
+        with tempdir() as d:
+            run = os.path.join(d, "run")
+            os.makedirs(run)
+            m = _mutations()[0]
+            skills = [dict(_as_expected(m), skill=m["id"]),
+                      {"skill": "brand-guidelines", "risk_tier": "Low"}]
+            with open(os.path.join(run, "results.json"), "w") as f:
+                json.dump({"target": d, "skills": skills}, f)
+            p = _helpers.run_path(os.path.join(ROOT_DIR, "tests", "calibration",
+                                               "score_calibration.py"),
+                                  "--runs", run, "--corpus",
+                                  os.path.join(ROOT_DIR, "tests", "calibration", "corpus.json"),
+                                  "--mutations",
+                                  os.path.join(ROOT_DIR, "tests", "calibration",
+                                               "mutations.json"))
+            lines = [l for l in p.stdout.splitlines() if l.strip().startswith(("S1", "S2"))]
+            self.assertEqual(len(lines), 3, p.stdout + p.stderr)
+            for line in lines:
+                self.assertFalse(line.rstrip().endswith("PASS"), line)
+            self.assertTrue(lines[0].rstrip().endswith("NO DATA"), lines[0])
 
 
 class MetricTests(unittest.TestCase):

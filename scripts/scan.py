@@ -25,6 +25,13 @@ MIN_NUMBERED = 3
 
 EXEC_EXTS = frozenset((".sh", ".bash", ".zsh", ".py", ".js", ".mjs", ".cjs", ".ts",
                        ".rb", ".ps1", ".pl"))
+SHELL_EXTS = frozenset((".sh", ".bash", ".zsh"))
+SHELL_SHEBANG_RE = re.compile(r"^#![^\n]{0,200}[/ ](sh|bash|zsh)[ \t]*(\n|$)")
+# SKILL.md command text: the openers are the CAP-SHELL-1 (shell-language fence) and CAP-SHELL-3
+# (```! fence) rules, so "inside a shell fence" means exactly what makes `shell` true.
+SHELL_FENCE_RULES = ("CAP-SHELL-1", "CAP-SHELL-3")
+FENCE_RE = re.compile(r"^[ \t]{0,3}(`{3,}|~{3,})")
+INLINE_CMD_RE = re.compile(r"!`([^`\n]{1,2000})`")
 EXCERPT_MAX = 120
 COMMENT_MAX = 2000
 
@@ -64,6 +71,41 @@ def load_capabilities():
 
 def is_executable(path, head):
     return os.path.splitext(path)[1].lower() in EXEC_EXTS or head.startswith("#!")
+
+
+def is_shell_file(path, text):
+    """A shell script: .sh/.bash/.zsh, or no known extension and an sh/bash/zsh shebang."""
+    ext = os.path.splitext(path)[1].lower()
+    if ext in SHELL_EXTS:
+        return True
+    return ext not in EXEC_EXTS and bool(SHELL_SHEBANG_RE.match(text[:256]))
+
+
+def skill_md_commands(body):
+    """The command text of a SKILL.md body: the lines inside shell fences (the fences that
+    set CAP-SHELL-1 / CAP-SHELL-3) and the inline `!`command`` spans outside any fence.
+
+    A fence closes on a line of the same character, at least as long as the opener, with
+    nothing but whitespace after it (CommonMark); an unclosed fence runs to the end.
+    """
+    openers = [r["_re"] for r in load_capabilities()["shell"]["rules"]
+               if r["id"] in SHELL_FENCE_RULES]
+    out = []
+    fence = None  # (char, length, is_shell)
+    for line in _split_lines(body):
+        m = FENCE_RE.match(line)
+        if fence is None:
+            if m:
+                fence = (m.group(1)[0], len(m.group(1)), any(o.match(line) for o in openers))
+            else:
+                out.extend(INLINE_CMD_RE.findall(line))
+            continue
+        if m and m.group(1)[0] == fence[0] and len(m.group(1)) >= fence[1] \
+                and not line[m.end():].strip():
+            fence = None
+        elif fence[2]:
+            out.append(line)
+    return "\n".join(out)
 
 
 def _escape_char(ch):
@@ -222,7 +264,7 @@ def inventory(manifest, skill, root, hits):
     parsed = parse_skill_file(skill_text) if skill_text is not None else None
     body = parsed.body if parsed else ""
     meta = parsed.meta if parsed and isinstance(parsed.meta, dict) else {}
-    exec_files = []
+    exec_files, shell_files, other_exec = [], [], []
     for e in skill["files"]:
         if e.get("symlink"):
             continue
@@ -230,7 +272,14 @@ def inventory(manifest, skill, root, hits):
             real_root, e["path"], limit)
         if text is not None and is_executable(e["path"], text[:2]):
             exec_files.append(text)
-    texts = {"executable": exec_files, "skill_md": [body], "any": exec_files + [body]}
+            (shell_files if is_shell_file(e["path"], text) else other_exec).append(text)
+    commands = skill_md_commands(body)
+    # where: skill_md = the SKILL.md body; skill_md_commands = its shell-fenced lines and
+    # inline !`command` spans; executable = executable files; shell_commands = shell files
+    # plus skill_md_commands; executable_non_shell = the other executable files.
+    texts = {"executable": exec_files, "skill_md": [body], "any": exec_files + [body],
+             "skill_md_commands": [commands], "shell_commands": shell_files + [commands],
+             "executable_non_shell": other_exec}
     skill_hits = [h for h in hits if h.get("scope", "skill") == "skill"]
     found = {}  # flag -> {value: [sources]}
 

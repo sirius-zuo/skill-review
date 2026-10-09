@@ -65,10 +65,11 @@ The skill is a directory of markdown instructions, Python scripts and rule files
 
 Claude Code registers the skill from the `name: skill-review` frontmatter in `SKILL.md`.
 
-Download and unpack the repository from https://github.com/sirius-zuo/skill-review (Code, then Download ZIP), then copy the folder into your skills directory:
+Download and unpack the repository from https://github.com/sirius-zuo/skill-review (Code, then Download ZIP); it unpacks to a folder named `skill-review-main`. If an older copy is already installed, remove the `~/.claude/skills/skill-review` folder first (otherwise `cp -r` nests the new copy inside it). Then copy the folder into your skills directory:
 
 ```bash
-cp -r skill-review ~/.claude/skills/skill-review
+mkdir -p ~/.claude/skills
+cp -r skill-review-main ~/.claude/skills/skill-review
 ```
 
 **Invoke with the slash command:**
@@ -87,7 +88,7 @@ Is the skill at ./agent-skills/deploy safe to install?
 
 ### Codex
 
-Download and unpack the repository from https://github.com/sirius-zuo/skill-review (Code, then Download ZIP), and place the folder at `~/skills/skill-review`.
+Download and unpack the repository from https://github.com/sirius-zuo/skill-review (Code, then Download ZIP), and place the unpacked `skill-review-main` folder at `~/skills/skill-review` (renaming it).
 
 In your project's `AGENTS.md`:
 
@@ -103,7 +104,7 @@ To use: ask Codex to review a skill directory or GitHub repo.
 
 ### Cursor
 
-Download and unpack the repository from https://github.com/sirius-zuo/skill-review (Code, then Download ZIP), and place the folder at `~/skills/skill-review`. Then create the rules folder:
+Download and unpack the repository from https://github.com/sirius-zuo/skill-review (Code, then Download ZIP), and place the unpacked `skill-review-main` folder at `~/skills/skill-review` (renaming it). Then create the rules folder:
 
 ```bash
 mkdir -p .cursor/rules
@@ -124,7 +125,7 @@ To review a skill, read and follow the instructions in:
 
 ### Windsurf
 
-Download and unpack the repository from https://github.com/sirius-zuo/skill-review (Code, then Download ZIP), and place the folder at `~/skills/skill-review`.
+Download and unpack the repository from https://github.com/sirius-zuo/skill-review (Code, then Download ZIP), and place the unpacked `skill-review-main` folder at `~/skills/skill-review` (renaming it).
 
 In `.windsurfrules`:
 
@@ -137,7 +138,7 @@ instructions in ~/skills/skill-review/SKILL.md.
 
 ### GitHub Copilot
 
-Download and unpack the repository from https://github.com/sirius-zuo/skill-review (Code, then Download ZIP), and place the folder at `~/skills/skill-review`.
+Download and unpack the repository from https://github.com/sirius-zuo/skill-review (Code, then Download ZIP), and place the unpacked `skill-review-main` folder at `~/skills/skill-review` (renaming it).
 
 In `.github/copilot-instructions.md`:
 

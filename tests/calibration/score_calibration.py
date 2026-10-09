@@ -8,7 +8,8 @@ Usage: score_calibration.py --runs DIR [DIR ...] --labels DIR --corpus corpus.js
   (2) the result's skill name, (3) for a single-skill run, the last two path parts of the
   results.json "target" (".../MU-02/good-skill" -> MU-02, "good-skill").
 Prints each metric against the spec section 2 targets S1-S5 with PASS/FAIL (NO DATA when
-there is nothing to measure). Exit status is 1 if any target FAILs. Python 3.7 stdlib only.
+there is nothing to measure). S1 needs runs of all three reference skills (else NO DATA);
+S2 counts every mutation, and a mutation without a run counts as not detected. Exit status is 1 if any target FAILs. Python 3.7 stdlib only.
 """
 import argparse
 import json
@@ -20,6 +21,8 @@ S4_KAPPA = 0.6
 S5_QUOTE_FAILURE = 0.05
 S2_DETERMINISTIC = 1.0
 S2_JUDGE = 0.9
+# S1 reference skills (spec section 2): all three must have runs before S1 can PASS.
+S1_REFERENCE = ("brand-guidelines", "internal-comms", "pdf")
 
 
 def percent_agreement(a, b):
@@ -99,7 +102,9 @@ def _result(name, value, target, ok, fmt="%.2f"):
 
 
 def corpus_matches(corpus, runs):
-    rows, s1_ok, s1_seen = [], True, False
+    """Rows per corpus skill, and S1: True/False when every S1 reference skill has a run,
+    else None (NO DATA); a partial set never passes."""
+    rows, s1_ok, s1_seen = [], True, set()
     for e in corpus["skills"]:
         got = runs.get(e["name"])
         if not got:
@@ -113,14 +118,17 @@ def corpus_matches(corpus, runs):
         rows.append((e["name"], "/".join(sorted(tiers)), "/".join(e["expected_tiers"]),
                      "tier ok" if tier_ok else "TIER MISMATCH",
                      "band ok" if band_ok else "BAND MISMATCH"))
-        if e["source"] == "anthropic" and e["name"] in ("brand-guidelines", "internal-comms", "pdf"):
-            s1_seen = True
+        if e["source"] == "anthropic" and e["name"] in S1_REFERENCE:
+            s1_seen.add(e["name"])
             s1_ok = s1_ok and tier_ok
-    return rows, (s1_ok if s1_seen else None)
+    return rows, (s1_ok if s1_seen == set(S1_REFERENCE) else None)
 
 
 def mutation_detection(mutations, runs, corpus):
+    """S2 rates over every mutation in the corpus. A mutation without a run counts as not
+    detected, so partial data cannot pass; with no mutation runs at all both are None."""
     det_total = det_ok = jud_total = jud_ok = 0
+    any_run = any(runs.get(m["id"]) for m in mutations)
     detail = []
     base_tiers = {}
     for e in corpus["skills"]:
@@ -128,10 +136,12 @@ def mutation_detection(mutations, runs, corpus):
             base_tiers[e["name"]] = set(_tier(s) for s in runs[e["name"]])
     for m in mutations:
         got = runs.get(m["id"])
+        exp = m["expect"]
         if not got:
             detail.append((m["id"], "no run"))
+            det_total += 1 if (exp["lint"] or exp["hits"]) else 0
+            jud_total += 1 if (exp["gates"] or exp["tier"] or exp["tier_unchanged"]) else 0
             continue
-        exp = m["expect"]
         if exp["lint"] or exp["hits"]:
             det_total += 1
             lint_ids = set(f["rule_id"] for s in got for f in s.get("lint_findings", []))
@@ -152,6 +162,8 @@ def mutation_detection(mutations, runs, corpus):
             ok = all(judge_checks)
             jud_ok += 1 if ok else 0
             detail.append((m["id"], "judge " + ("ok" if ok else "NOT AS EXPECTED")))
+    if not any_run:
+        return None, None, detail
     det = det_ok / float(det_total) if det_total else None
     jud = jud_ok / float(jud_total) if jud_total else None
     return det, jud, detail

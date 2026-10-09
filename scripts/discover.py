@@ -24,6 +24,8 @@ FIXTURE_DIRS = {"tests", "test", "fixtures", "fixture", "examples", "example",
 SKILL_FILE_NAMES = ("SKILL.md", "skill.md")
 CLONE_PREFIX = "skill-review-clone-"
 CLONE_MARKER = ".skill-review-clone"
+WORK_MARKER = ".skill-review-work"
+STDOUT_NAME_MAX = 64
 LINK_RE = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
 CODE_RE = re.compile(r"`([^`\n]+)`")
 CODE_PATH_RE = re.compile(r"^[A-Za-z0-9_./-]+\.[A-Za-z0-9]{1,5}$")
@@ -406,6 +408,22 @@ def _writable(path):
     return os.path.isdir(cur) and os.access(cur, os.W_OK | os.X_OK)
 
 
+def _has_work_marker(path):
+    """True only for a real directory (not a symlink) holding a regular WORK_MARKER file."""
+    try:
+        if not stat.S_ISDIR(os.lstat(path).st_mode):
+            return False
+        return stat.S_ISREG(os.lstat(os.path.join(path, WORK_MARKER)).st_mode)
+    except OSError:
+        return False
+
+
+def _stdout_name(name):
+    """Skill names are untrusted frontmatter text: print only [a-z0-9-], at most 64 chars."""
+    out = sanitize_name(name if isinstance(name, str) else "")[:STDOUT_NAME_MAX].strip("-")
+    return out or "skill"
+
+
 def _target_name(kind, value):
     if kind == "github":
         name = value.rstrip("/").rsplit("/", 1)[-1]
@@ -442,6 +460,15 @@ def _run(args):
                                    {"confirm": "SELF_REVIEW"})
         if not _writable(run_dir):
             raise ValidationFailed(["The output directory `%s` is not writable." % run_dir])
+        work_dir = os.path.join(run_dir, "work")
+        if os.path.lexists(work_dir):
+            # Never reuse a work/ folder: cleanup deletes work/, so it must be one this run
+            # created (carrying WORK_MARKER) and must not hold an earlier run's files.
+            owner = ("an earlier skill-review run" if _has_work_marker(work_dir)
+                     else "not created by skill-review")
+            raise ValidationFailed([
+                "The folder `%s` already exists (%s). skill-review will not reuse or delete it; "
+                "give another `--out`." % (work_dir, owner)])
         source = {"type": kind, "url": value if kind == "github" else None, "clone_dir": clone_dir}
         manifest = build_manifest(root, self_dir=args.self_dir, source=source)
         skills = reviewable_skills(manifest)
@@ -450,9 +477,12 @@ def _run(args):
         routing = args.mode == "parallel" and not args.no_kit and not args.no_routing
         passes = estimate_passes(len(skills), args.trials, args.no_kit, routing)
         estimate = {"passes": passes, "ask": passes > limits["orchestration"]["ask_threshold_passes"]}
-        work_dir = os.path.join(run_dir, "work")
         try:
-            os.makedirs(work_dir, exist_ok=True)
+            os.makedirs(run_dir, exist_ok=True)
+            os.mkdir(work_dir)
+            fd = os.open(os.path.join(work_dir, WORK_MARKER),
+                         os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0), 0o644)
+            os.close(fd)
         except OSError as e:
             raise ValidationFailed(["Cannot create `%s`: %s" % (work_dir, e)])
         write_json(os.path.join(work_dir, "manifest.json"), manifest, "manifest")
@@ -468,7 +498,7 @@ def _run(args):
         sys.stdout.write(json.dumps({
             "schema_version": 1, "engine": "script", "ok": True, "run_dir": run_dir,
             "work_dir": work_dir,
-            "skills": [{"key": s["key"], "name": s["name"]} for s in skills],
+            "skills": [{"key": s["key"], "name": _stdout_name(s["name"])} for s in skills],
             "estimate": estimate}, ensure_ascii=False) + "\n")
         ok = True
     finally:
@@ -478,17 +508,28 @@ def _run(args):
 
 
 def _cleanup(args):
-    run = load_run(args.work_dir)
+    try:
+        run = load_run(args.work_dir)
+    except (OSError, ValueError) as e:
+        raise ValidationFailed(["Cannot read run.json in `%s` (%s); nothing was deleted."
+                                % (args.work_dir, e)])
     removed = []
     clone_dir = (run.get("source") or {}).get("clone_dir")
     if clone_dir and os.path.basename(clone_dir).startswith(CLONE_PREFIX) and _is_clone_dir(clone_dir):
         shutil.rmtree(clone_dir, ignore_errors=True)
         removed.append(clone_dir)
+    warnings = []
     if not run.get("args", {}).get("keep_work"):
-        shutil.rmtree(args.work_dir, ignore_errors=True)
-        removed.append(args.work_dir)
-    sys.stdout.write(json.dumps({"schema_version": 1, "engine": "script", "ok": True,
-                                 "removed": removed}) + "\n")
+        if _has_work_marker(args.work_dir):
+            shutil.rmtree(args.work_dir, ignore_errors=True)
+            removed.append(args.work_dir)
+        else:
+            warnings.append("Left `%s` in place: it has no %s marker, so skill-review did not "
+                            "create it." % (args.work_dir, WORK_MARKER))
+    out = {"schema_version": 1, "engine": "script", "ok": True, "removed": removed}
+    if warnings:
+        out["warnings"] = warnings
+    sys.stdout.write(json.dumps(out, ensure_ascii=False) + "\n")
     return EXIT_OK
 
 
