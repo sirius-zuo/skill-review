@@ -1,0 +1,76 @@
+{
+  "anthropic_skills_sha": "683bc88e56f3e09ba94f7055977f3d3aa499f202",
+  "skills": [
+    {
+      "name": "good-skill",
+      "source": "fixture",
+      "path": "tests/fixtures/good-skill",
+      "expected_tiers": [
+        "Low"
+      ],
+      "expected_band": "Strong",
+      "expected_rule": null
+    },
+    {
+      "name": "text-formatter",
+      "source": "fixture",
+      "path": "tests/fixtures/skillset/formatter",
+      "expected_tiers": [
+        "Low"
+      ],
+      "expected_band": "Adequate",
+      "expected_rule": null
+    },
+    {
+      "name": "bad-skill",
+      "source": "fixture",
+      "path": "tests/fixtures/bad-skill",
+      "expected_tiers": [
+        "Low"
+      ],
+      "expected_band": "Weak",
+      "expected_rule": null
+    },
+    {
+      "name": "file-deployer",
+      "source": "fixture",
+      "path": "tests/fixtures/skillset/deployer",
+      "expected_tiers": [
+        "Critical"
+      ],
+      "expected_band": "Weak",
+      "expected_rule": "SAF-B1"
+    },
+    {
+      "name": "brand-guidelines",
+      "source": "anthropic",
+      "path": "skills/brand-guidelines",
+      "expected_tiers": [
+        "Low"
+      ],
+      "expected_band": null,
+      "expected_rule": null
+    },
+    {
+      "name": "internal-comms",
+      "source": "anthropic",
+      "path": "skills/internal-comms",
+      "expected_tiers": [
+        "Low"
+      ],
+      "expected_band": null,
+      "expected_rule": null
+    },
+    {
+      "name": "pdf",
+      "source": "anthropic",
+      "path": "skills/pdf",
+      "expected_tiers": [
+        "Low",
+        "Medium"
+      ],
+      "expected_band": null,
+      "expected_rule": "SEC-SC-UNPINNED-PIP"
+    }
+  ]
+}
