@@ -38,6 +38,30 @@ class SupportDocsTests(unittest.TestCase):
         for needle in ["none", "routing-<n>.json", "OK <path>", "untrusted", "nonce"]:
             self.assertIn(needle, doc, needle)
 
+    def test_fallback_doc(self):
+        doc = _read("support", "fallback.md")
+        # safe reading (spec 5.5) and shell-metacharacter rejection (spec 5.1)
+        needles = ["symlink", "NUL", "rules/scoring.json", "nonce", "untrusted",
+                   "`;`", "`|`", "`&`", "`$`", "backtick", "llm-fallback",
+                   "never restated", "fallback-verified"]
+        for needle in needles:
+            self.assertIn(needle, doc, needle)
+
+    def test_proven_runs_doc(self):
+        doc = _read("support", "proven-runs.md")
+        legacy = "## Legacy rubric — not comparable"
+        fmt = "## Entry format"
+        self.assertIn(legacy, doc)
+        self.assertIn(fmt, doc)
+        head, _, tail = doc.partition(legacy)
+        for n in (1, 2, 3):
+            self.assertNotIn("Run %d —" % n, head)
+            self.assertIn("Run %d —" % n, tail)
+        entry = doc.partition(fmt)[2].partition("\n## ")[0]
+        for field in ["Date", "Target", "Model", "Engine", "Trials", "Tiers", "Bands",
+                      "Calibration metrics", "Expectation changes"]:
+            self.assertIn(field, entry, field)
+
 
 if __name__ == "__main__":
     unittest.main()
