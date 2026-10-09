@@ -100,15 +100,26 @@ def build_manifest(root, self_dir=None, source=None):
     limits = scoring()["limits"]
     real_root = os.path.realpath(root)
     all_files, skill_dirs = _walk(real_root)
-    dirs = sorted(skill_dirs)
-    owner_dirs = [d for d in dirs if not _is_fixture(d)]
-
     skills = []
     warnings = []
+    texts = {}
+    for d in sorted(skill_dirs):
+        skill_file = (d + "/" if d != "." else "") + skill_dirs[d]
+        sf_path = os.path.join(real_root, skill_file.replace("/", os.sep))
+        try:
+            if stat.S_ISREG(os.lstat(sf_path).st_mode):
+                texts[d] = read_text(sf_path, limits["ingest_max_bytes"])
+                continue
+        except OSError:
+            pass
+        warnings.append({"code": "UNREADABLE_FILE", "detail": skill_file})
+    dirs = sorted(texts)
+    owner_dirs = [d for d in dirs if not _is_fixture(d)]
+
     for d in dirs:
         fixture = _is_fixture(d)
         skill_file = (d + "/" if d != "." else "") + skill_dirs[d]
-        text = read_text(os.path.join(real_root, skill_file.replace("/", os.sep)))
+        text = texts[d]
         meta = parse_skill_file(text).meta
         name = meta.get("name") if isinstance(meta, dict) else None
         if not isinstance(name, str) or not name.strip():

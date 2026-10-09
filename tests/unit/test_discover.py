@@ -115,6 +115,16 @@ class DiscoverTests(unittest.TestCase):
             self.assertFalse(by["a/pipe"]["bundled"])
             self.assertEqual(validate_against(m, "manifest"), [])
 
+    @unittest.skipUnless(hasattr(os, "mkfifo"), "no mkfifo")
+    def test_fifo_skill_md_is_not_read(self):
+        with tempdir() as root:
+            make_tree(root, {"good/SKILL.md": skill("good")})
+            os.makedirs(os.path.join(root, "bad"))
+            os.mkfifo(os.path.join(root, "bad", "SKILL.md"))
+            m = build_manifest(root)
+            self.assertEqual([s["dir"] for s in m["skills"]], ["good"])
+            self.assertEqual(validate_against(m, "manifest"), [])
+
     @unittest.skipIf(hasattr(os, "geteuid") and os.geteuid() == 0, "root reads anything")
     def test_unreadable_file(self):
         with tempdir() as root:
