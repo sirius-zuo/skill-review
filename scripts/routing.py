@@ -179,6 +179,8 @@ def findings(metrics_, thresholds):
                 "The router picked this skill for prompts it should not handle; narrow the "
                 "description."))
         for winner in sorted(m.get("confusions") or {}):
+            if winner not in metrics_:  # distractor winners count against recall only
+                continue
             ids = m["confusions"][winner]
             if len(ids) >= thresholds["collision_min"]:
                 fs.append(_finding(

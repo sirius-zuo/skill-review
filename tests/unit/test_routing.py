@@ -47,7 +47,8 @@ def _setup(tmp):
 
 
 def sev(recall=1.0, ftr=0.0, confusions=None):
-    m = {"s": {"recall": recall, "false_trigger_rate": ftr, "confusions": confusions or {}}}
+    m = {"s": {"recall": recall, "false_trigger_rate": ftr, "confusions": confusions or {}},
+         "fmt": {"recall": 1.0, "false_trigger_rate": 0.0, "confusions": {}}}
     out = routing.findings(m, scoring()["routing"])["s"]
     return out
 
@@ -119,6 +120,16 @@ class RoutingTests(unittest.TestCase):
         self.assertTrue(f[0]["simulated"])
         self.assertEqual(f[0]["source"], "routing")
         self.assertEqual(f[0]["category"], "trigger")
+
+    def test_distractor_win_not_collision(self):
+        m = {"s": {"recall": 0.0, "false_trigger_rate": 0.0,
+                   "confusions": {"pdf-handler": ["P1", "P2"]}},
+             "t": {"recall": 1.0, "false_trigger_rate": 0.0, "confusions": {}}}
+        f = routing.findings(m, scoring()["routing"])["s"]
+        self.assertEqual([x["id"] for x in f], ["RT-UNDER"])
+        m["s"]["confusions"] = {"t": ["P1", "P2"]}
+        f = routing.findings(m, scoring()["routing"])["s"]
+        self.assertIn("RT-COLLIDE", [x["id"] for x in f])
 
     def test_findings_none_recall(self):
         self.assertEqual(sev(recall=None), [])
